@@ -11,7 +11,7 @@
     16,
     1
   ],
-  "iters": 100,
+  "iters": 30,
   "image": {
     "buffer": "img",
     "width": 512,

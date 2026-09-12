@@ -1,80 +1,127 @@
-# clic — a clean, CUDA-like compute language
+<div align="center">
 
-**Goal:** the software layer of a French/EU compute-accelerator project — a
-language that replaces CUDA by keeping its strengths (the grid-of-threads
-kernel model) while dropping its sharp edges (block/thread bookkeeping, host
-boilerplate, cryptic errors).
+# clic
 
-**Strategy — one language, many backends:**
+### An open, vendor-neutral compute language — CUDA's model without the lock-in.
+
+**One language for AI, hashing, and graphics** — running on your GPU today,
+built to target FPGAs and custom silicon next.
+
+<img src="assets/cube.gif" width="360" alt="A 3D cube rasterized by a clic kernel" />
+
+*A shaded 3D cube, rasterized pixel-by-pixel by a clic kernel on the GPU.*
+
+![license](https://img.shields.io/badge/license-MIT-blue)
+![backend](https://img.shields.io/badge/backend-Apple%20Metal-black)
+![next](https://img.shields.io/badge/next-FPGA%20%2F%20silicon-8A2BE2)
+![status](https://img.shields.io/badge/status-prototype-orange)
+![stars](https://img.shields.io/github/stars/Lastoneparis/clic?style=social)
+
+</div>
+
+---
+
+## Why clic?
+
+CUDA is fast, but it only runs on NVIDIA. That lock-in is its biggest weakness.
+
+**clic keeps what's good about CUDA** — the simple *grid-of-threads* kernel
+model — and drops what isn't: the vendor lock-in, the block/thread bookkeeping,
+the cryptic errors. One kernel, written once, is meant to run on **many**
+backends.
 
 ```
-   .clic source
-        │  clicc.py  (compiler)
+   your kernel (.clic)
+        │   clicc.py  (compiler)
         ▼
-   Metal Shading Language ──► Apple GPU   ◄─ backend #1 (WORKS TODAY, this repo)
-   (later) clic IR ─────────► FPGA / USB  ◄─ backend #2 (the €1000 board)
-   (later) clic IR ─────────► real silicon◄─ backend #3 (raise money)
+   Metal Shading Language ──► Apple GPU     ◄─ works today
+   (next) clic IR ──────────► FPGA over USB ◄─ our own board
+   (next) clic IR ──────────► custom silicon
 ```
 
-Proving the language on this Mac's GPU **now** de-risks everything: the
-language, compiler, and benchmarks are done before any hardware ships. When
-the FPGA arrives we add a backend, not a new language.
+The bet: you don't beat CUDA on raw speed — you beat it on **openness,
+efficiency-per-watt, and sovereignty**, and clic is the software layer that
+makes non-NVIDIA hardware usable.
 
-## What's here
+## Benchmarks — Apple M3 Pro, verified
+
+| Workload | Kernel | Result | Verified against |
+|---|---|---|---|
+| 🧠 **AI** | `gemm_tiled` (1024³, shared memory) | **872 GFLOP/s** | CPU reference |
+| 🧠 AI | `gemm` (1024³, naive) | 477 GFLOP/s | CPU reference |
+| 🔐 **Hash** | `sha256` (1M nonces) | **836 MH/s** | Apple CryptoKit |
+| 🎮 **Graphics** | `raster` (512², shaded cube) | ~3,200 fps | *(the GIF above)* |
+
+The tiled GEMM is **1.8× faster** than the naive one — same language, real GPU
+optimization (shared memory + barriers). The SHA-256 runtime also scans its
+range for the "hardest" hash — a real mining primitive.
+
+## Quick start
+
+Requires macOS with Xcode command-line tools (Swift + the Metal compiler) and
+Python 3. Then:
+
+```bash
+git clone https://github.com/Lastoneparis/clic
+cd clic
+./run.sh          # compiles every kernel and runs it on your GPU
+```
+
+Each kernel prints its throughput and a correctness check.
+
+## The language, at a glance
+
+`tid.x` is the global thread index — no block math to get wrong:
+
+```rust
+// y = a*x + y
+kernel saxpy(n: i32, a: f32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        y[i] = a * x[i] + y[i];
+    }
+}
+```
+
+It also has `threadgroup` (shared) memory, `barrier()`, bitwise ops and
+`rotr` (for crypto), local `array<T,N>`, and per-group ids `ltid`/`bid` —
+enough to write a tiled matrix-multiply, a full SHA-256, and a rasterizer.
+See [`examples/`](examples/).
+
+## How it's built
 
 | Path | What |
 |------|------|
-| `clicc.py` | The compiler: clic → Metal Shading Language (lexer, parser, codegen) |
-| `examples/saxpy.clic` | `y = a*x + y` — the hello-world kernel |
-| `examples/gemm.clic` | `C = A*B` — matrix multiply, the core of AI |
-| `host/clicrun.swift` | Metal runtime: compiles the kernel, runs on GPU, verifies vs CPU, benchmarks |
+| `clicc.py` | The compiler: clic → Metal (lexer, parser, codegen) |
+| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `sha256`, `raster` |
+| `host/clicrun.swift` | Metal runtime + benchmark & verification harness |
+| `raster_scene.py` | Host-side geometry (the "vertex stage") for the rasterizer |
 | `runs/*.json` | Run manifests (sizes, grid, buffers) |
-| `run.sh` | Build + run everything |
-
-## Run it
-
-```bash
-./run.sh
-```
-
-## First results (Apple M3 Pro, 18-core GPU)
-
-| Kernel | Throughput | Correctness |
-|--------|-----------|-------------|
-| **gemm_tiled** (1024³, fp32) — AI, shared-memory | **~870 GFLOP/s** | PASS (vs CPU) |
-| gemm (1024³, fp32) — AI, naive | ~477 GFLOP/s | PASS (vs CPU) |
-| **sha256** (1M nonces) — hash / mining | **~836 MH/s** | PASS (vs Apple CryptoKit) |
-| **raster** (512² , 3D cube) — graphics | ~0.31 ms/frame (~3200 fps) | visual (renders build/raster.png) |
-| saxpy (1M, fp32) | memory-bound | PASS (exact) |
-
-All three target workloads run in your own language:
-- **AI** — GEMM; the tiled (shared-memory) version is **1.8× faster** than naive,
-  proving clic expresses real GPU optimization.
-- **Hash** — SHA-256, verified vs Apple CryptoKit; the runtime also scans the
-  hashed range for the "hardest" nonce (a real mining primitive).
-- **Graphics** — a triangle rasterizer renders a shaded 3D cube to a PNG; the
-  same idea drives the FPGA's HDMI framebuffer later.
-
-## The clic language (v0.1)
-
-```
-kernel name(param: type, ...) { ...statements... }
-```
-
-- **Types:** `i32`, `u32`, `f32`, `bool`, `buffer<T>`
-- **Thread id:** `tid.x`, `tid.y`, `tid.z` (global index — no block math)
-- **Statements:** `let`/`var` (typed or inferred), `if/else`, `for`, assignment
-- **Expressions:** arithmetic, comparisons, `&&`/`||`/`!`, indexing `a[i]`,
-  `.` access, builtins (`min`, `max`, `sqrt`, `float(...)`, ...)
 
 ## Roadmap
 
-- [x] clic → Metal; GEMM, SAXPY, SHA-256 verified on the GPU
-- [x] SHA-256 verified vs Apple CryptoKit, + a mining scan (hardest nonce)
-- [x] Language: bitwise ops, rotate, local + `threadgroup` arrays, `barrier()`,
-      `ltid`/`bid` (thread-in-group / group ids)
-- [x] Tiled/threadgroup-memory GEMM — 1.8× over naive
-- [x] Triangle rasterizer — renders a shaded 3D cube (graphics path started)
-- [ ] Perspective-correct / textured triangles; a spinning animation
-- [ ] clic IR + FPGA backend (targets the ULX3S 85F over USB)
-- [ ] Graphics API compatibility (the long road to running real games)
+- [x] clic → Metal; GEMM, SAXPY, SHA-256 running and verified
+- [x] Shared memory, `barrier()`, `ltid`/`bid` — tiled GEMM (1.8× over naive)
+- [x] SHA-256 verified vs Apple CryptoKit, plus a mining scan
+- [x] Triangle rasterizer — a shaded 3D cube (graphics path started)
+- [ ] A dedicated clic IR (decouple the front-end from backends)
+- [ ] The **FPGA backend** — target the Lattice ECP5 (ULX3S) over USB
+- [ ] Textured / perspective-correct triangles; animation
+- [ ] The long road: a graphics API + drivers (to run real games)
+
+## Status & honesty
+
+clic is an early **prototype**. It is **not** faster than CUDA in absolute
+terms — nothing is, by being a language; speed comes from silicon. What clic
+offers is portability, clean ergonomics, and a path to hardware you control.
+Contributions and ideas welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE) © 2026 Hugo Moriceau
+
+<div align="center">
+
+**If this direction interests you, a ⭐ helps it find contributors.**
+
+</div>

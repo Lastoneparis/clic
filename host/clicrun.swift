@@ -259,7 +259,7 @@ var imageLine: String? = nil
 if let im = json["image"] as? [String: Any], let bname = im["buffer"] as? String,
    let w = im["width"] as? Int, let h = im["height"] as? Int, let rel = im["path"] as? String,
    let bidx = bindings.firstIndex(where: { $0.name == bname }) {
-    let outURL = baseDir.appendingPathComponent(rel)
+    let outURL = rel.hasPrefix("/") ? URL(fileURLWithPath: rel) : baseDir.appendingPathComponent(rel)
     savePNG(buffer: gpuBuffers[bidx]!, width: w, height: h, path: outURL.path)
     imageLine = "image     : \(outURL.path)"
 }

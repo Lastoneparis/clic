@@ -3,6 +3,7 @@ build/
 *.metallib
 *.o
 clicrun
+runs/_anim.json   # temp manifest from make_gif.sh
 
 # Python
 __pycache__/
