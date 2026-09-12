@@ -11,3 +11,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Private outreach package — never publish (names target customers / strategy)
+outreach/
