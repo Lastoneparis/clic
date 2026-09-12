@@ -21,7 +21,7 @@ import argparse
 # --------------------------------------------------------------------------
 # Lexer
 # --------------------------------------------------------------------------
-KEYWORDS = {'kernel', 'let', 'var', 'if', 'else', 'for', 'array',
+KEYWORDS = {'kernel', 'let', 'var', 'if', 'else', 'for', 'array', 'threadgroup',
             'buffer', 'return', 'i32', 'f32', 'u32', 'bool', 'true', 'false'}
 
 # Order matters: comments/whitespace before operators, floats before ints.
@@ -143,6 +143,12 @@ class Parser:
             elem = self.parse_type()
             self.eat('>')
             return ('buffer', elem)
+        if t.kind == 'threadgroup':
+            self.next()
+            inner = self.parse_type()
+            if inner[0] != 'array':
+                self.err('threadgroup must qualify an array type')
+            return ('array', inner[1], inner[2], 'threadgroup')
         if t.kind == 'array':
             self.next()
             self.eat('<')
@@ -150,7 +156,7 @@ class Parser:
             self.eat(',')
             size = int(self.eat('INT').val)
             self.eat('>')
-            return ('array', elem, size)
+            return ('array', elem, size, 'thread')
         if t.kind in ('i32', 'f32', 'u32', 'bool'):
             self.next()
             return ('scalar', t.kind)
@@ -320,8 +326,12 @@ def gen_expr(e):
         return e[1]
     if t == 'member':
         base, field = e[1], e[2]
-        if base == ('id', 'tid'):        # tid.x -> int(gid.x)
+        if base == ('id', 'tid'):        # tid.x  -> global thread id
             return 'int(gid.%s)' % field
+        if base == ('id', 'ltid'):       # ltid.x -> thread id within threadgroup
+            return 'int(ltid.%s)' % field
+        if base == ('id', 'bid'):        # bid.x  -> threadgroup id in grid
+            return 'int(bid.%s)' % field
         return '%s.%s' % (gen_expr(base), field)
     if t == 'index':
         return '%s[%s]' % (gen_expr(e[1]), gen_expr(e[2]))
@@ -332,6 +342,8 @@ def gen_expr(e):
             if name == 'rotr':                # rotate-right on 32-bit: rotr(x, n)
                 x, n = gen_expr(args[0]), gen_expr(args[1])
                 return '(((%s) >> (%s)) | ((%s) << (32 - (%s))))' % (x, n, x, n)
+            if name == 'barrier':             # threadgroup synchronization
+                return 'threadgroup_barrier(mem_flags::mem_threadgroup)'
             if name not in _BUILTINS:
                 raise SyntaxError('clic: unknown function %r' % name)
         return '%s(%s)' % (name, ', '.join(gen_expr(a) for a in args))
@@ -351,7 +363,9 @@ def gen_stmt(s, ind):
         _, kw, name, ty, e = s
         if ty is not None and ty[0] == 'array':          # local array: T name[N];
             elem = _TYMAP[ty[1][1]]
-            return '%s%s %s[%d];' % (pad, elem, name, ty[2])
+            storage = ty[3] if len(ty) > 3 else 'thread'
+            prefix = 'threadgroup ' if storage == 'threadgroup' else ''
+            return '%s%s%s %s[%d];' % (pad, prefix, elem, name, ty[2])
         cty = 'auto' if ty is None else _cscalar(ty)
         if e is None:
             return '%s%s %s;' % (pad, cty, name)
@@ -394,6 +408,8 @@ def gen_kernel(k):
             sig.append('    device %s* %s [[buffer(%d)]]'
                        % (_TYMAP[ty[1][1]], pname, idx))
     sig.append('    uint3 gid [[thread_position_in_grid]]')
+    sig.append('    uint3 ltid [[thread_position_in_threadgroup]]')
+    sig.append('    uint3 bid [[threadgroup_position_in_grid]]')
     return 'kernel void %s(\n%s) {\n%s\n}' % (name, ',\n'.join(sig),
                                               gen_block(body, 1))
 

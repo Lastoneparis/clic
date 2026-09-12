@@ -41,14 +41,19 @@ the FPGA arrives we add a backend, not a new language.
 
 | Kernel | Throughput | Correctness |
 |--------|-----------|-------------|
-| gemm (1024³, fp32) — the AI workload | **~460 GFLOP/s** | PASS (rel err 1e-7 vs CPU) |
-| sha256 (1M nonces) — the hash workload | **~800 MH/s** | PASS (vs Apple CryptoKit) |
+| **gemm_tiled** (1024³, fp32) — AI, shared-memory | **~870 GFLOP/s** | PASS (vs CPU) |
+| gemm (1024³, fp32) — AI, naive | ~477 GFLOP/s | PASS (vs CPU) |
+| **sha256** (1M nonces) — hash / mining | **~836 MH/s** | PASS (vs Apple CryptoKit) |
+| **raster** (512² , 3D cube) — graphics | ~0.31 ms/frame (~3200 fps) | visual (renders build/raster.png) |
 | saxpy (1M, fp32) | memory-bound | PASS (exact) |
 
-Two of the three target workloads, in your own language, verified. GEMM proves
-the AI story; SHA-256 proves the hash/hacking story (and is the FPGA's future
-strong suit on perf-per-watt). The graphics workload arrives with the FPGA
-board (HDMI out). GEMM is a naive kernel — a tiled version will push it higher.
+All three target workloads run in your own language:
+- **AI** — GEMM; the tiled (shared-memory) version is **1.8× faster** than naive,
+  proving clic expresses real GPU optimization.
+- **Hash** — SHA-256, verified vs Apple CryptoKit; the runtime also scans the
+  hashed range for the "hardest" nonce (a real mining primitive).
+- **Graphics** — a triangle rasterizer renders a shaded 3D cube to a PNG; the
+  same idea drives the FPGA's HDMI framebuffer later.
 
 ## The clic language (v0.1)
 
@@ -64,9 +69,12 @@ kernel name(param: type, ...) { ...statements... }
 
 ## Roadmap
 
-- [x] clic → Metal, GEMM + SAXPY running and verified on the GPU
-- [x] SHA-256 kernel — verified vs Apple CryptoKit (the hash/hacking benchmark)
-- [x] Language: bitwise ops, rotate, local arrays (`array<T,N>`)
-- [ ] Tiled/threadgroup-memory GEMM (show clic can express optimization)
-- [ ] A tiny rasterizer (the video-game demo)
-- [ ] clic IR + FPGA backend (targets the ULX3S over USB)
+- [x] clic → Metal; GEMM, SAXPY, SHA-256 verified on the GPU
+- [x] SHA-256 verified vs Apple CryptoKit, + a mining scan (hardest nonce)
+- [x] Language: bitwise ops, rotate, local + `threadgroup` arrays, `barrier()`,
+      `ltid`/`bid` (thread-in-group / group ids)
+- [x] Tiled/threadgroup-memory GEMM — 1.8× over naive
+- [x] Triangle rasterizer — renders a shaded 3D cube (graphics path started)
+- [ ] Perspective-correct / textured triangles; a spinning animation
+- [ ] clic IR + FPGA backend (targets the ULX3S 85F over USB)
+- [ ] Graphics API compatibility (the long road to running real games)

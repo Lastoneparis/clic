@@ -1,0 +1,47 @@
+// gemm_tiled.clic  —  C = A * B, tiled with threadgroup (shared) memory.
+//
+// The naive gemm re-reads A and B from slow device memory K times per output.
+// This version stages 16x16 tiles into fast on-chip threadgroup memory, so
+// each value is read from device memory once per tile and reused 16x. This is
+// THE classic GPU optimization — and it proves clic can express it: shared
+// memory (`threadgroup array`), thread-in-group ids (`ltid`), group ids
+// (`bid`), and `barrier()` synchronization.
+//
+// Launch: grid [N, M], threadgroup [16, 16].
+
+kernel gemm_tiled(M: i32, N: i32, K: i32,
+                  A: buffer<f32>, B: buffer<f32>, C: buffer<f32>) {
+    var Asub: threadgroup array<f32, 256>;   // 16 x 16 tile of A
+    var Bsub: threadgroup array<f32, 256>;   // 16 x 16 tile of B
+
+    let lx = ltid.x;                 // 0..15 within the tile
+    let ly = ltid.y;
+    let row = bid.y * 16 + ly;       // this thread's global output row
+    let col = bid.x * 16 + lx;       // and column
+
+    var acc: f32 = 0.0;
+    let ntiles = (K + 15) / 16;
+
+    for (var t: i32 = 0; t < ntiles; t = t + 1) {
+        // Cooperatively load one tile of A and one of B into shared memory.
+        let aCol = t * 16 + lx;
+        if (row < M && aCol < K) { Asub[ly * 16 + lx] = A[row * K + aCol]; }
+        else                     { Asub[ly * 16 + lx] = 0.0; }
+
+        let bRow = t * 16 + ly;
+        if (bRow < K && col < N) { Bsub[ly * 16 + lx] = B[bRow * N + col]; }
+        else                     { Bsub[ly * 16 + lx] = 0.0; }
+
+        barrier();               // all threads finished loading the tile
+
+        for (var k: i32 = 0; k < 16; k = k + 1) {
+            acc = acc + Asub[ly * 16 + k] * Bsub[k * 16 + lx];
+        }
+
+        barrier();               // done with the tile before overwriting it
+    }
+
+    if (row < M && col < N) {
+        C[row * N + col] = acc;
+    }
+}

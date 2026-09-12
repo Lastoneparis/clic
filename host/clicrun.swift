@@ -14,6 +14,8 @@ import Foundation
 import Metal
 import QuartzCore
 import CryptoKit
+import CoreGraphics
+import ImageIO
 
 func fail(_ m: String) -> Never {
     FileHandle.standardError.write(("clicrun: " + m + "\n").data(using: .utf8)!)
@@ -27,6 +29,21 @@ struct Binding {
     let value: Double     // scalar value
     let len: Int          // buffer element count
     let initMode: String  // "random" | "zero" | "sha256_k" | "sha256_h"
+    let data: [Float]?    // inline f32 contents (overrides initMode)
+}
+
+func savePNG(buffer: MTLBuffer, width: Int, height: Int, path: String) {
+    let cs = CGColorSpaceCreateDeviceRGB()
+    let info = CGImageAlphaInfo.noneSkipLast.rawValue      // memory bytes R,G,B,x
+    guard let ctx = CGContext(data: buffer.contents(), width: width, height: height,
+                              bitsPerComponent: 8, bytesPerRow: width * 4,
+                              space: cs, bitmapInfo: info),
+          let img = ctx.makeImage(),
+          let dest = CGImageDestinationCreateWithURL(
+              URL(fileURLWithPath: path) as CFURL, "public.png" as CFString, 1, nil)
+    else { return }
+    CGImageDestinationAddImage(dest, img, nil)
+    CGImageDestinationFinalize(dest)
 }
 
 // ---- SHA-256 constants (used by init modes) -------------------------------
@@ -70,7 +87,8 @@ for b in (json["bindings"] as! [[String: Any]]) {
         type: (b["type"] as? String) ?? "f32",
         value: ((b["value"] as? NSNumber)?.doubleValue) ?? 0,
         len: (b["len"] as? Int) ?? 0,
-        initMode: (b["init"] as? String) ?? "zero"))
+        initMode: (b["init"] as? String) ?? "zero",
+        data: (b["data"] as? [Any])?.compactMap { ($0 as? NSNumber)?.floatValue }))
 }
 
 // ---- Metal setup ----------------------------------------------------------
@@ -94,6 +112,14 @@ for (idx, b) in bindings.enumerated() where b.kind == "buffer" {
     let bytes = b.len * 4
     guard let buf = device.makeBuffer(length: bytes, options: .storageModeShared)
     else { fail("buffer alloc failed for \(b.name)") }
+    if let d = b.data {                       // inline data (e.g. rasterizer geometry)
+        var arr = d
+        if arr.count < b.len { arr += [Float](repeating: 0, count: b.len - arr.count) }
+        hostF[b.name] = arr
+        _ = arr.withUnsafeBytes { memcpy(buf.contents(), $0.baseAddress!, bytes) }
+        gpuBuffers[idx] = buf
+        continue
+    }
     switch b.initMode {
     case "random":
         var arr = [Float](repeating: 0, count: b.len)
@@ -210,6 +236,34 @@ for _ in 0..<iters { dispatchOnce() }
 let t1 = CACurrentMediaTime()
 let avg = (t1 - t0) / Double(iters)
 
+// ---- mining scan (sha256): find the "hardest" hash in the scanned range --
+var miningLine: String? = nil
+if verify == "sha256" {
+    let outAll = bufU("out")
+    let base2 = UInt32(truncatingIfNeeded: Int(scalar("base")))
+    var bestZeros = -1
+    var bestNonce: UInt32 = 0
+    for id in 0..<gridTotal {
+        var zeros = 0, j = 0
+        while j < 8 {
+            let word = outAll[id * 8 + j]
+            if word == 0 { zeros += 32; j += 1 } else { zeros += word.leadingZeroBitCount; break }
+        }
+        if zeros > bestZeros { bestZeros = zeros; bestNonce = base2 &+ UInt32(id) }
+    }
+    miningLine = "mined     : best \(bestZeros) leading zero bits @ nonce \(bestNonce) (of \(gridTotal) scanned)"
+}
+
+// ---- image output (rasterizer) -------------------------------------------
+var imageLine: String? = nil
+if let im = json["image"] as? [String: Any], let bname = im["buffer"] as? String,
+   let w = im["width"] as? Int, let h = im["height"] as? Int, let rel = im["path"] as? String,
+   let bidx = bindings.firstIndex(where: { $0.name == bname }) {
+    let outURL = baseDir.appendingPathComponent(rel)
+    savePNG(buffer: gpuBuffers[bidx]!, width: w, height: h, path: outURL.path)
+    imageLine = "image     : \(outURL.path)"
+}
+
 // ---- report ---------------------------------------------------------------
 print("┌─ clic · Metal backend ─────────────────────────────")
 print(String(format: "│ device      : %@", device.name))
@@ -223,5 +277,7 @@ if flops > 0 {
     print(String(format: "│ hash rate   : %.1f MH/s (%.0f hashes / dispatch)",
                  (Double(gridTotal) / avg) / 1e6, Double(gridTotal)))
 }
-print(String(format: "│ correctness : %@", verifyMsg))
+if verify != nil { print(String(format: "│ correctness : %@", verifyMsg)) }
+if let m = miningLine { print("│ " + m) }
+if let im = imageLine { print("│ " + im) }
 print("└────────────────────────────────────────────────────")

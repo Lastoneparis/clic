@@ -1,0 +1,50 @@
+// raster.clic  —  a triangle rasterizer. The START of the graphics path.
+//
+// One thread per pixel. Each pixel tests every triangle with edge functions
+// (point-in-triangle) and keeps the color of the last covering triangle
+// (painter's order). This is the fragment stage of a GPU. The 3D projection
+// (the "vertex shader") is done on the host in raster_scene.py, which feeds
+// this kernel a depth-sorted, shaded triangle list. On the FPGA this same
+// idea drives the HDMI framebuffer — "a GPU you can see."
+//
+// tris: flat f32 buffer, 9 floats per triangle: x0,y0, x1,y1, x2,y2, r,g,b
+// img : W*H RGBA8 pixels (0xAABBGGRR)
+
+kernel raster(W: i32, H: i32, ntri: i32, tris: buffer<f32>, img: buffer<u32>) {
+    let px = tid.x;
+    let py = tid.y;
+    if (px < W && py < H) {
+        var fx = float(px) + 0.5;
+        var fy = float(py) + 0.5;
+
+        // dark background
+        var r = 0.05;
+        var g = 0.06;
+        var b = 0.10;
+
+        for (var i: i32 = 0; i < ntri; i = i + 1) {
+            let o = i * 9;
+            var ax = tris[o + 0]; var ay = tris[o + 1];
+            var bx = tris[o + 2]; var by = tris[o + 3];
+            var cx = tris[o + 4]; var cy = tris[o + 5];
+
+            // three edge functions; inside if all share a sign (either winding)
+            var e0 = (bx - ax) * (fy - ay) - (by - ay) * (fx - ax);
+            var e1 = (cx - bx) * (fy - by) - (cy - by) * (fx - bx);
+            var e2 = (ax - cx) * (fy - cy) - (ay - cy) * (fx - cx);
+            var inside = (e0 >= 0.0 && e1 >= 0.0 && e2 >= 0.0)
+                      || (e0 <= 0.0 && e1 <= 0.0 && e2 <= 0.0);
+            if (inside) {
+                r = tris[o + 6];
+                g = tris[o + 7];
+                b = tris[o + 8];
+            }
+        }
+
+        var R = uint(r * 255.0);
+        var G = uint(g * 255.0);
+        var B = uint(b * 255.0);
+        var A = uint(255);
+        img[py * W + px] = R | (G << 8) | (B << 16) | (A << 24);
+    }
+}
