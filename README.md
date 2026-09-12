@@ -69,9 +69,19 @@ cd clic
 ./run.sh          # compiles every kernel and runs it on your GPU
 ```
 
+Or use the CLI:
+
+```bash
+bin/clic build examples/gemm.clic     # compile a kernel to Metal
+bin/clic run   runs/gemm.json         # build (if needed) + run on the GPU
+bin/clic bench                        # run every example
+bin/clic sim                          # run the RTL simulations
+```
+
 Each kernel prints its throughput and a correctness check. New here? Walk
 through **[docs/TUTORIAL.md](docs/TUTORIAL.md)** — write and run your own kernel
-in a few minutes.
+in a few minutes. See also **[clic vs CUDA](docs/COMPARISON.md)** (honest
+positioning).
 
 ## From Python
 

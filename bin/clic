@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""
+clic — command-line interface.
+
+    clic build <file.clic> [-o out.metal]   compile a kernel to Metal
+    clic run   <manifest.json>              build (if needed) + run on the GPU
+    clic bench                              build + run every example
+    clic sim                                run the RTL simulations
+    clic help                               this message
+"""
+import os
+import sys
+import json
+import subprocess
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+import clicc  # noqa: E402
+
+BUILD = os.path.join(ROOT, "build")
+CLICRUN = os.path.join(BUILD, "clicrun")
+RUNTIME_SRC = os.path.join(ROOT, "host", "clicrun.swift")
+
+
+def die(msg):
+    sys.stderr.write("clic: " + msg + "\n")
+    sys.exit(1)
+
+
+def ensure_runtime():
+    os.makedirs(BUILD, exist_ok=True)
+    if (not os.path.exists(CLICRUN)
+            or os.path.getmtime(RUNTIME_SRC) > os.path.getmtime(CLICRUN)):
+        print("clic: building runtime (clicrun)…")
+        subprocess.run(["swiftc", "-O", RUNTIME_SRC, "-o", CLICRUN], check=True)
+
+
+def build(src, out=None):
+    if out is None:
+        os.makedirs(BUILD, exist_ok=True)
+        base = os.path.splitext(os.path.basename(src))[0]
+        out = os.path.join(BUILD, base + ".metal")
+    with open(out, "w") as f:
+        f.write(clicc.compile_src(clicc.preprocess(src)))
+    return out
+
+
+def cmd_build(args):
+    if not args:
+        die("usage: clic build <file.clic> [-o out.metal]")
+    out = args[args.index("-o") + 1] if "-o" in args else None
+    print("built", build(args[0], out))
+
+
+def cmd_run(args):
+    if not args:
+        die("usage: clic run <manifest.json>")
+    manifest = args[0]
+    with open(manifest) as f:
+        m = json.load(f)
+    base = os.path.splitext(os.path.basename(m["metal"]))[0]
+    src = os.path.join(ROOT, "examples", base + ".clic")
+    if os.path.exists(src):
+        build(src, os.path.join(BUILD, base + ".metal"))
+    ensure_runtime()
+    subprocess.run([CLICRUN, manifest], check=True)
+
+
+def cmd_bench(args):
+    subprocess.run(["bash", os.path.join(ROOT, "run.sh")], check=True)
+
+
+def cmd_sim(args):
+    subprocess.run(["bash", os.path.join(ROOT, "rtl", "sim.sh")], check=True)
+
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] in ("help", "-h", "--help"):
+        print(__doc__)
+        return
+    cmd, rest = sys.argv[1], sys.argv[2:]
+    table = {"build": cmd_build, "run": cmd_run, "bench": cmd_bench, "sim": cmd_sim}
+    if cmd not in table:
+        die("unknown command %r (try: clic help)" % cmd)
+    table[cmd](rest)
+
+
+if __name__ == "__main__":
+    main()

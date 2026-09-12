@@ -25,12 +25,12 @@ Worked through iteratively. Checked = done & pushed.
 - [x] LANGUAGE.md reference
 - [x] TUTORIAL.md — write your first kernel, step by step
 - [ ] MANIFESTS.md — the run-manifest format
-- [ ] COMPARISON.md — clic vs CUDA (honest positioning)
+- [x] COMPARISON.md — clic vs CUDA (honest positioning)
 - [ ] examples gallery in the README
 
 ## Adoption / "serious competitor" paths
 - [x] Python host API (`import clic`; run a kernel in a few lines) — `python/`
-- [ ] a `clic` CLI (`clic build`, `clic run`)
+- [x] a `clic` CLI (`clic build` / `run` / `bench` / `sim`) — `bin/clic`
 - [ ] a dedicated clic IR (decouple front-end from backends)
 - [x] RTL compute core — synthesizable `N×N` systolic MAC array, verified in
       simulation (`rtl/`) — the first FPGA→ASIC artifact
