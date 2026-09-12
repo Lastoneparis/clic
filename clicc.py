@@ -15,13 +15,14 @@ Usage:
     python3 clicc.py examples/gemm.clic --emit-clic-ast   # debug
 """
 import sys
+import os
 import re
 import argparse
 
 # --------------------------------------------------------------------------
 # Lexer
 # --------------------------------------------------------------------------
-KEYWORDS = {'kernel', 'let', 'var', 'if', 'else', 'for', 'array', 'threadgroup',
+KEYWORDS = {'kernel', 'fn', 'let', 'var', 'if', 'else', 'for', 'array', 'threadgroup',
             'buffer', 'return', 'i32', 'f32', 'u32', 'bool', 'true', 'false'}
 
 # Order matters: comments/whitespace before operators, floats before ints.
@@ -31,7 +32,7 @@ TOKEN_SPEC = [
     ('FLOAT',   r'\d+\.\d+([eE][+-]?\d+)?|\d+[eE][+-]?\d+'),
     ('INT',     r'\d+'),
     ('ID',      r'[A-Za-z_][A-Za-z0-9_]*'),
-    ('OP',      r'<<|>>|<=|>=|==|!=|&&|\|\||[-+*/%<>=!.,;:()\[\]{}&|^~]'),
+    ('OP',      r'<<|>>|->|<=|>=|==|!=|&&|\|\||[-+*/%<>=!.,;:()\[\]{}&|^~]'),
 ]
 _MASTER = re.compile('|'.join('(?P<%s>%s)' % (n, p) for n, p in TOKEN_SPEC))
 
@@ -111,10 +112,29 @@ class Parser:
 
     # -- top level --
     def parse_program(self):
-        ks = []
+        decls = []
         while not self.at('EOF'):
-            ks.append(self.parse_kernel())
-        return ks
+            if self.at('fn'):
+                decls.append(self.parse_fn())
+            else:
+                decls.append(self.parse_kernel())
+        return decls
+
+    def parse_fn(self):
+        self.eat('fn')
+        name = self.eat('ID').val
+        self.eat('(')
+        params = []
+        if not self.at(')'):
+            params.append(self.parse_param())
+            while self.at(','):
+                self.next()
+                params.append(self.parse_param())
+        self.eat(')')
+        self.eat('->')
+        ret = self.parse_type()
+        body = self.parse_block()
+        return ('fn', name, params, ret, body)
 
     def parse_kernel(self):
         self.eat('kernel')
@@ -179,6 +199,14 @@ class Parser:
             return self.parse_if()
         if k == 'for':
             return self.parse_for()
+        if k == 'return':
+            self.next()
+            if self.at(';'):
+                self.next()
+                return ('return', None)
+            e = self.parse_expr()
+            self.eat(';')
+            return ('return', e)
         if k == '{':
             return self.parse_block()
         e = self.parse_expr()
@@ -305,7 +333,8 @@ class Parser:
 _TYMAP = {'i32': 'int', 'u32': 'uint', 'f32': 'float', 'bool': 'bool'}
 # builtin functions passed straight through to MSL
 _BUILTINS = {'float', 'int', 'uint', 'min', 'max', 'abs', 'sqrt',
-             'exp', 'log', 'pow', 'fma', 'floor', 'ceil'}
+             'exp', 'log', 'pow', 'fma', 'floor', 'ceil', 'tanh', 'clamp'}
+_USER_FNS = set()      # names of user-defined fns (populated per compile)
 
 
 def _cscalar(ty):
@@ -344,7 +373,7 @@ def gen_expr(e):
                 return '(((%s) >> (%s)) | ((%s) << (32 - (%s))))' % (x, n, x, n)
             if name == 'barrier':             # threadgroup synchronization
                 return 'threadgroup_barrier(mem_flags::mem_threadgroup)'
-            if name not in _BUILTINS:
+            if name not in _BUILTINS and name not in _USER_FNS:
                 raise SyntaxError('clic: unknown function %r' % name)
         return '%s(%s)' % (name, ', '.join(gen_expr(a) for a in args))
     if t == 'un':
@@ -374,6 +403,10 @@ def gen_stmt(s, ind):
         return '%s%s = %s;' % (pad, gen_expr(s[1]), gen_expr(s[2]))
     if t == 'exprstmt':
         return '%s%s;' % (pad, gen_expr(s[1]))
+    if t == 'return':
+        if s[1] is None:
+            return '%sreturn;' % pad
+        return '%sreturn %s;' % (pad, gen_expr(s[1]))
     if t == 'if':
         _, cond, then, els = s
         out = '%sif (%s) {\n%s\n%s}' % (pad, gen_expr(cond),
@@ -414,12 +447,65 @@ def gen_kernel(k):
                                               gen_block(body, 1))
 
 
+def _fn_ptype(ty):
+    if ty[0] == 'scalar':
+        return _TYMAP[ty[1]]
+    if ty[0] == 'buffer':
+        return 'device %s*' % _TYMAP[ty[1][1]]
+    raise SyntaxError('clic: unsupported fn parameter type %r' % (ty,))
+
+
+def gen_fn_proto(f):
+    _, name, params, ret, _body = f
+    ps = ['%s %s' % (_fn_ptype(ty), pn) for pn, ty in params]
+    return '%s %s(%s);' % (_TYMAP[ret[1]], name, ', '.join(ps))
+
+
+def gen_fn(f):
+    _, name, params, ret, body = f
+    ps = ['%s %s' % (_fn_ptype(ty), pn) for pn, ty in params]
+    return '%s %s(%s) {\n%s\n}' % (_TYMAP[ret[1]], name, ', '.join(ps),
+                                   gen_block(body, 1))
+
+
 _HEADER = '#include <metal_stdlib>\nusing namespace metal;\n'
 
 
 def compile_src(src):
-    kernels = Parser(lex(src)).parse_program()
-    return _HEADER + '\n' + '\n\n'.join(gen_kernel(k) for k in kernels) + '\n'
+    global _USER_FNS
+    decls = Parser(lex(src)).parse_program()
+    fns = [d for d in decls if d[0] == 'fn']
+    kernels = [d for d in decls if d[0] == 'kernel']
+    _USER_FNS = set(f[1] for f in fns)
+    parts = [_HEADER]
+    if fns:
+        parts.append('\n'.join(gen_fn_proto(f) for f in fns))      # forward decls
+        parts.append('\n\n'.join(gen_fn(f) for f in fns))
+    if kernels:
+        parts.append('\n\n'.join(gen_kernel(k) for k in kernels))
+    return '\n\n'.join(parts) + '\n'
+
+
+_INCLUDE = re.compile(r'\s*include\s+"([^"]+)"\s*$')
+
+
+def preprocess(path, seen=None):
+    """Resolve `include "file"` directives (relative to the including file)."""
+    seen = set() if seen is None else seen
+    real = os.path.realpath(path)
+    if real in seen:
+        return ''
+    seen.add(real)
+    base = os.path.dirname(path)
+    out = []
+    with open(path) as f:
+        for line in f:
+            m = _INCLUDE.match(line)
+            if m:
+                out.append(preprocess(os.path.join(base, m.group(1)), seen))
+            else:
+                out.append(line)
+    return ''.join(out)
 
 
 def main():
@@ -427,8 +513,7 @@ def main():
     ap.add_argument('src')
     ap.add_argument('-o', '--out')
     args = ap.parse_args()
-    with open(args.src) as f:
-        src = f.read()
+    src = preprocess(args.src)
     out = compile_src(src)
     if args.out:
         with open(args.out, 'w') as f:

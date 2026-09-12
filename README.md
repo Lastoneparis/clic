@@ -11,6 +11,7 @@ built to target FPGAs and custom silicon next.
 
 *A shaded 3D cube, rasterized pixel-by-pixel by a clic kernel on the GPU.*
 
+[![CI](https://github.com/Lastoneparis/clic/actions/workflows/ci.yml/badge.svg)](https://github.com/Lastoneparis/clic/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![backend](https://img.shields.io/badge/backend-Apple%20Metal-black)
 ![next](https://img.shields.io/badge/next-FPGA%20%2F%20silicon-8A2BE2)
@@ -48,6 +49,7 @@ makes non-NVIDIA hardware usable.
 | Workload | Kernel | Result | Verified against |
 |---|---|---|---|
 | 🧠 **AI** | `gemm_tiled` (1024³, shared memory) | **872 GFLOP/s** | CPU reference |
+| 🧠 AI | `linear_relu` (fused matmul + bias + ReLU) | 505 GFLOP/s | CPU reference |
 | 🧠 AI | `gemm` (1024³, naive) | 477 GFLOP/s | CPU reference |
 | 🔐 **Hash** | `sha256` (1M nonces) | **836 MH/s** | Apple CryptoKit |
 | 🎮 **Graphics** | `raster` (512², shaded cube) | ~3,200 fps | *(the GIF above)* |
@@ -83,20 +85,33 @@ kernel saxpy(n: i32, a: f32, x: buffer<f32>, y: buffer<f32>) {
 }
 ```
 
-It also has `threadgroup` (shared) memory, `barrier()`, bitwise ops and
-`rotr` (for crypto), local `array<T,N>`, and per-group ids `ltid`/`bid` —
-enough to write a tiled matrix-multiply, a full SHA-256, and a rasterizer.
-See [`examples/`](examples/).
+It also has reusable **device functions** and a small **standard library** —
+a fused neural-net layer is just:
+
+```rust
+include "../lib/activations.clic"      // relu, gelu, sigmoid, ...
+
+kernel linear_relu(/* ... */) {
+    // ... matmul + bias ...
+    C[row * N + col] = relu(acc);      // C = relu(A*B + bias)
+}
+```
+
+Plus `threadgroup` (shared) memory, `barrier()`, bitwise ops and `rotr` (for
+crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
+**[docs/LANGUAGE.md](docs/LANGUAGE.md)**. Kernels in [`examples/`](examples/).
 
 ## How it's built
 
 | Path | What |
 |------|------|
 | `clicc.py` | The compiler: clic → Metal (lexer, parser, codegen) |
-| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `sha256`, `raster` |
+| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `linear_relu`, `sha256`, `raster` |
+| `lib/*.clic` | Standard library (activation functions) |
 | `host/clicrun.swift` | Metal runtime + benchmark & verification harness |
 | `raster_scene.py` | Host-side geometry (the "vertex stage") for the rasterizer |
 | `runs/*.json` | Run manifests (sizes, grid, buffers) |
+| `docs/LANGUAGE.md` | The language reference · `tests/` | CI compile checks |
 
 ## Roadmap
 
@@ -104,6 +119,7 @@ See [`examples/`](examples/).
 - [x] Shared memory, `barrier()`, `ltid`/`bid` — tiled GEMM (1.8× over naive)
 - [x] SHA-256 verified vs Apple CryptoKit, plus a mining scan
 - [x] Triangle rasterizer — a shaded 3D cube (graphics path started)
+- [x] Device functions + `include`; a stdlib (activations) + a fused NN layer
 - [ ] A dedicated clic IR (decouple the front-end from backends)
 - [ ] The **FPGA backend** — target the Lattice ECP5 (ULX3S) over USB
 - [ ] Textured / perspective-correct triangles; animation

@@ -1,0 +1,22 @@
+// linear_relu.clic — a real neural-network layer:  C = relu(A*B + bias)
+//
+// A fused dense/linear layer: matrix multiply, add a per-column bias, then
+// apply ReLU — all in one kernel, no round-trips to memory between steps.
+// This is exactly the primitive an inference engine needs, and it shows the
+// clic standard library in action (the activation comes from lib/).
+
+include "../lib/activations.clic"
+
+kernel linear_relu(M: i32, N: i32, K: i32,
+                   A: buffer<f32>, B: buffer<f32>,
+                   bias: buffer<f32>, C: buffer<f32>) {
+    let row = tid.y;
+    let col = tid.x;
+    if (row < M && col < N) {
+        var acc: f32 = bias[col];
+        for (var k: i32 = 0; k < K; k = k + 1) {
+            acc = acc + A[row * K + k] * B[k * N + col];
+        }
+        C[row * N + col] = relu(acc);
+    }
+}

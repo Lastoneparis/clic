@@ -1,0 +1,23 @@
+// lib/activations.clic — clic standard library: neural-network activations.
+// Reusable device functions, pulled into a kernel with:  include "..."
+
+fn relu(x: f32) -> f32 {
+    if (x > 0.0) { return x; }
+    return 0.0;
+}
+
+fn leaky_relu(x: f32, slope: f32) -> f32 {
+    if (x > 0.0) { return x; }
+    return slope * x;
+}
+
+fn sigmoid(x: f32) -> f32 {
+    return 1.0 / (1.0 + exp(-x));
+}
+
+// GELU (tanh approximation) — the activation used in modern transformers.
+fn gelu(x: f32) -> f32 {
+    let c = 0.7978845608;                 // sqrt(2/pi)
+    let inner = c * (x + 0.044715 * x * x * x);
+    return 0.5 * x * (1.0 + tanh(inner));
+}
