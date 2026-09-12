@@ -1,0 +1,18 @@
+{
+  "kernel": "linear",
+  "metal": "../build/linear.metal",
+  "grid": [1024, 1024, 1],
+  "threadgroup": [16, 16, 1],
+  "iters": 50,
+  "flops": 2147483648,
+  "verify": "linear",
+  "bindings": [
+    { "name": "M",    "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "N",    "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "K",    "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "A",    "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "B",    "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "bias", "kind": "buffer", "type": "f32", "len": 1024,    "init": "random" },
+    { "name": "C",    "kind": "buffer", "type": "f32", "len": 1048576, "init": "zero" }
+  ]
+}
