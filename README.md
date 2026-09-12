@@ -133,6 +133,9 @@ terms — nothing is, by being a language; speed comes from silicon. What clic
 offers is portability, clean ergonomics, and a path to hardware you control.
 Contributions and ideas welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+The bigger vision — a European fabless AI-inference accelerator built on this
+open stack — is in [PITCH.md](PITCH.md) and [docs/FUNDRAISING.md](docs/FUNDRAISING.md).
+
 ## License
 
 [MIT](LICENSE) © 2026 Hugo Moriceau
