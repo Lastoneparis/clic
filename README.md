@@ -130,7 +130,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 | Path | What |
 |------|------|
 | `clicc.py` | The compiler: clic → Metal (lexer, parser, codegen) |
-| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `linear_relu`, `reduce`, `nn` (softmax/layernorm), `collatz`, `sha256`, `raster` |
+| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `linear_relu`, `reduce`, `nn` (softmax/layernorm), `attention`, `quant` (INT8), `collatz`, `sha256`, `raster` |
 | `lib/*.clic` | Standard library (activation functions) |
 | `host/clicrun.swift` | Metal runtime + benchmark & verification harness |
 | `python/clic.py` | Python host API — run a kernel from Python |
@@ -149,6 +149,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 - [x] Parallel reduction (tree sum) + a step-by-step TUTORIAL
 - [x] Ternary operator + `f16` (half) type — verified on GPU
 - [x] `i8`/`u8` quantized types (INT8 quantize/dequantize) — verified on GPU
+- [x] Scaled dot-product attention (transformer core) — verified on GPU
 - [x] AI library: softmax + layernorm (transformer building blocks)
 - [x] Python host API — run a clic kernel from Python in a few lines
 - [ ] A dedicated clic IR (decouple the front-end from backends)

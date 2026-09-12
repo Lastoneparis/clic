@@ -1,0 +1,44 @@
+// attention.clic — single-head scaled dot-product attention.
+//   O = softmax(Q·Kᵀ · scale) · V           (scale = 1/sqrt(D))
+//
+// The heart of every transformer / LLM. One thread per query row; scores are
+// held in a thread-local array, softmaxed with the max-subtraction trick, then
+// used to weight V. Exercises local arrays, nested loops, exp/max — the clic
+// features that make real AI kernels expressible. (S ≤ 128 in this demo.)
+
+kernel attention(S: i32, D: i32, scale: f32,
+                 Q: buffer<f32>, K: buffer<f32>, V: buffer<f32>, O: buffer<f32>) {
+    let i = tid.x;
+    if (i < S) {
+        var scores: array<f32, 128>;
+
+        // scores[j] = (Q[i] · K[j]) * scale ; track the row max for stability
+        var m = -1.0e30;
+        for (var j: i32 = 0; j < S; j = j + 1) {
+            var acc: f32 = 0.0;
+            for (var d: i32 = 0; d < D; d = d + 1) {
+                acc = acc + Q[i * D + d] * K[j * D + d];
+            }
+            acc = acc * scale;
+            scores[j] = acc;
+            m = max(m, acc);
+        }
+
+        // softmax numerator + denominator
+        var s = 0.0;
+        for (var j: i32 = 0; j < S; j = j + 1) {
+            let e = exp(scores[j] - m);
+            scores[j] = e;
+            s = s + e;
+        }
+
+        // O[i] = sum_j softmax[j] * V[j]
+        for (var d: i32 = 0; d < D; d = d + 1) {
+            var o: f32 = 0.0;
+            for (var j: i32 = 0; j < S; j = j + 1) {
+                o = o + scores[j] * V[j * D + d];
+            }
+            O[i * D + d] = o / s;
+        }
+    }
+}

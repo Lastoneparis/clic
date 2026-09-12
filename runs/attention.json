@@ -1,0 +1,17 @@
+{
+  "kernel": "attention",
+  "metal": "../build/attention.metal",
+  "grid": [64, 1, 1],
+  "threadgroup": [64, 1, 1],
+  "iters": 50,
+  "verify": "attention",
+  "bindings": [
+    { "name": "S",     "kind": "scalar", "type": "i32", "value": 64 },
+    { "name": "D",     "kind": "scalar", "type": "i32", "value": 64 },
+    { "name": "scale", "kind": "scalar", "type": "f32", "value": 0.125 },
+    { "name": "Q",     "kind": "buffer", "type": "f32", "len": 4096, "init": "random" },
+    { "name": "K",     "kind": "buffer", "type": "f32", "len": 4096, "init": "random" },
+    { "name": "V",     "kind": "buffer", "type": "f32", "len": 4096, "init": "random" },
+    { "name": "O",     "kind": "buffer", "type": "f32", "len": 4096, "init": "zero" }
+  ]
+}

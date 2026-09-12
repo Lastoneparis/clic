@@ -295,6 +295,29 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(y[i] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, f16 compute)", maxRel)
+} else if verify == "attention" {
+    let S = Int(scalar("S")); let D = Int(scalar("D")); let scale = Float(scalar("scale"))
+    let Q = hostF["Q"]!; let K = hostF["K"]!; let V = hostF["V"]!; let O = bufF("O")
+    var maxRel = 0.0
+    for _ in 0..<8 {
+        let i = Int.random(in: 0..<S)
+        var sc = [Float](repeating: 0, count: S)
+        var m = -Float.greatestFiniteMagnitude
+        for j in 0..<S {
+            var a: Float = 0
+            for d in 0..<D { a += Q[i*D+d] * K[j*D+d] }
+            a *= scale; sc[j] = a; m = max(m, a)
+        }
+        var s: Float = 0
+        for j in 0..<S { sc[j] = exp(sc[j] - m); s += sc[j] }
+        for d in 0..<D {
+            var o: Float = 0
+            for j in 0..<S { o += sc[j] * V[j*D+d] }
+            let ref = o / s
+            if abs(ref) > 1e-4 { maxRel = max(maxRel, Double(abs(O[i*D+d] - ref) / abs(ref))) }
+        }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, attention)", maxRel)
 } else if verify == "quant_i8" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var maxErr = 0.0

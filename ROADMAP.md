@@ -19,6 +19,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] reductions (parallel tree sum) — `examples/reduce.clic`
 - [ ] reduction: max + prefix sum (scan)
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
+- [x] scaled dot-product attention — `examples/attention.clic` (transformer core)
 - [ ] more math (tanh already; add erf, rsqrt helpers)
 - [ ] crypto: sha256 as a callable module; keccak
 
