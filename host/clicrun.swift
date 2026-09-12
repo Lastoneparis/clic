@@ -329,6 +329,19 @@ if verify == "saxpy" {
         }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, attention)", maxRel)
+} else if verify == "conv2d" {
+    let H = Int(scalar("H")); let W = Int(scalar("W"))
+    let KH = Int(scalar("KH")); let KW = Int(scalar("KW"))
+    let OW = W - KW + 1, OH = H - KH + 1
+    let In = hostF["In"]!; let Wt = hostF["Wt"]!; let Out = bufF("Out")
+    var maxRel = 0.0
+    for _ in 0..<24 {
+        let ox = Int.random(in: 0..<OW), oy = Int.random(in: 0..<OH)
+        var acc: Float = 0
+        for ky in 0..<KH { for kx in 0..<KW { acc += In[(oy+ky)*W + (ox+kx)] * Wt[ky*KW + kx] } }
+        if acc != 0 { maxRel = max(maxRel, Double(abs(Out[oy*OW + ox] - acc) / abs(acc))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, conv2d)", maxRel)
 } else if verify == "quant_i8" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var maxErr = 0.0

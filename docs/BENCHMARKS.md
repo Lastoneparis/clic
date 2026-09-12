@@ -17,6 +17,7 @@ silicon.
 | `linear` | AI · dense + bias | 4.24 ms | 507 GFLOP/s | CPU reference |
 | `gemm` | AI · matmul (naive) | 4.54 ms | 473 GFLOP/s | CPU reference |
 | `attention` | Transformer · scaled dot-product | 0.78 ms | — | CPU reference (2.5e-7) |
+| `conv2d` | CNN · 2D convolution (3×3) | 0.17 ms | — | CPU reference (8.9e-8) |
 | `softmax_rows` | Transformer · softmax | 0.72 ms | — | CPU reference |
 | `layernorm_rows` | Transformer · layernorm | 0.62 ms | — | CPU reference |
 | `reduce_sum` | Reduction · tree sum | 0.34 ms | — | CPU (rel 1.4e-9) |

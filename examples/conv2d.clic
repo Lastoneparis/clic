@@ -1,0 +1,22 @@
+// conv2d.clic — 2D convolution (valid padding), the core of CNNs.
+//   Out[oy,ox] = sum_{ky,kx} In[oy+ky, ox+kx] * Wt[ky,kx]
+// One thread per output pixel. Extends the library beyond transformers to
+// vision models. Single-channel here; multi-channel is the same idea + a
+// channel loop.
+
+kernel conv2d(H: i32, W: i32, KH: i32, KW: i32,
+              In: buffer<f32>, Wt: buffer<f32>, Out: buffer<f32>) {
+    let ox = tid.x;
+    let oy = tid.y;
+    let OW = W - KW + 1;
+    let OH = H - KH + 1;
+    if (ox < OW && oy < OH) {
+        var acc: f32 = 0.0;
+        for (var ky: i32 = 0; ky < KH; ky = ky + 1) {
+            for (var kx: i32 = 0; kx < KW; kx = kx + 1) {
+                acc = acc + In[(oy + ky) * W + (ox + kx)] * Wt[ky * KW + kx];
+            }
+        }
+        Out[oy * OW + ox] = acc;
+    }
+}

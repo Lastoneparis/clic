@@ -20,6 +20,7 @@ Worked through iteratively. Checked = done & pushed.
 - [ ] reduction: max + prefix sum (scan)
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [x] scaled dot-product attention — `examples/attention.clic` (transformer core)
+- [x] conv2d — `examples/conv2d.clic` (CNN core)
 - [ ] more math (tanh already; add erf, rsqrt helpers)
 - [ ] crypto: sha256 as a callable module; keccak
 

@@ -16,6 +16,7 @@ python3 clicc.py examples/nn.clic          -o build/nn.metal
 python3 clicc.py examples/lang9.clic       -o build/lang9.metal
 python3 clicc.py examples/quant.clic       -o build/quant.metal
 python3 clicc.py examples/attention.clic   -o build/attention.metal
+python3 clicc.py examples/conv2d.clic      -o build/conv2d.metal
 python3 clicc.py examples/sha256.clic      -o build/sha256.metal
 python3 clicc.py examples/raster.clic      -o build/raster.metal
 python3 raster_scene.py                                     # build the cube scene
@@ -24,7 +25,7 @@ echo "==> [2/3] building GPU host (clicrun.swift)"
 swiftc -O host/clicrun.swift -o build/clicrun
 
 echo "==> [3/3] running on the GPU"
-for r in saxpy gemm gemm_tiled linear_relu linear reduce softmax layernorm attention clamp scale_half quant collatz sha256 raster; do
+for r in saxpy gemm gemm_tiled linear_relu linear reduce softmax layernorm attention conv2d clamp scale_half quant collatz sha256 raster; do
     echo
     ./build/clicrun "runs/$r.json"
 done
