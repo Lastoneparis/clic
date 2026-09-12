@@ -24,7 +24,7 @@ import argparse
 # --------------------------------------------------------------------------
 KEYWORDS = {'kernel', 'fn', 'let', 'var', 'if', 'else', 'for', 'while',
             'break', 'continue', 'array', 'threadgroup',
-            'buffer', 'return', 'i32', 'f32', 'u32', 'bool', 'true', 'false'}
+            'buffer', 'return', 'i32', 'f32', 'f16', 'u32', 'bool', 'true', 'false'}
 
 # Order matters: comments/whitespace before operators, floats before ints.
 TOKEN_SPEC = [
@@ -33,7 +33,7 @@ TOKEN_SPEC = [
     ('FLOAT',   r'\d+\.\d+([eE][+-]?\d+)?|\d+[eE][+-]?\d+'),
     ('INT',     r'\d+'),
     ('ID',      r'[A-Za-z_][A-Za-z0-9_]*'),
-    ('OP',      r'<<=|>>=|<<|>>|->|<=|>=|==|!=|&&|\|\||\+=|-=|\*=|/=|%=|&=|\^=|\|=|[-+*/%<>=!.,;:()\[\]{}&|^~]'),
+    ('OP',      r'<<=|>>=|<<|>>|->|<=|>=|==|!=|&&|\|\||\+=|-=|\*=|/=|%=|&=|\^=|\|=|[-+*/%<>=!.,;:?()\[\]{}&|^~]'),
 ]
 _MASTER = re.compile('|'.join('(?P<%s>%s)' % (n, p) for n, p in TOKEN_SPEC))
 
@@ -178,7 +178,7 @@ class Parser:
             size = int(self.eat('INT').val)
             self.eat('>')
             return ('array', elem, size, 'thread')
-        if t.kind in ('i32', 'f32', 'u32', 'bool'):
+        if t.kind in ('i32', 'f32', 'f16', 'u32', 'bool'):
             self.next()
             return ('scalar', t.kind)
         self.err('expected a type (i32/f32/u32/bool/buffer<..>/array<T,N>)')
@@ -276,7 +276,14 @@ class Parser:
 
     # -- expressions --
     def parse_expr(self):
-        return self.parse_bin(0)
+        cond = self.parse_bin(0)
+        if self.at('?'):                       # ternary: cond ? a : b (right-assoc)
+            self.next()
+            then_e = self.parse_expr()
+            self.eat(':')
+            else_e = self.parse_expr()
+            return ('ternary', cond, then_e, else_e)
+        return cond
 
     def parse_bin(self, level):
         if level == len(_BINOPS):
@@ -346,9 +353,9 @@ class Parser:
 # --------------------------------------------------------------------------
 # Code generation:  clic AST -> Metal Shading Language
 # --------------------------------------------------------------------------
-_TYMAP = {'i32': 'int', 'u32': 'uint', 'f32': 'float', 'bool': 'bool'}
+_TYMAP = {'i32': 'int', 'u32': 'uint', 'f32': 'float', 'f16': 'half', 'bool': 'bool'}
 # builtin functions passed straight through to MSL
-_BUILTINS = {'float', 'int', 'uint', 'min', 'max', 'abs', 'sqrt',
+_BUILTINS = {'float', 'int', 'uint', 'half', 'min', 'max', 'abs', 'sqrt',
              'exp', 'log', 'pow', 'fma', 'floor', 'ceil', 'tanh', 'clamp'}
 _USER_FNS = set()      # names of user-defined fns (populated per compile)
 _ASSIGN_OPS = {'=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>='}
@@ -397,6 +404,8 @@ def gen_expr(e):
         return '(%s%s)' % (e[1], gen_expr(e[2]))
     if t == 'bin':
         return '(%s %s %s)' % (gen_expr(e[2]), e[1], gen_expr(e[3]))
+    if t == 'ternary':
+        return '(%s ? %s : %s)' % (gen_expr(e[1]), gen_expr(e[2]), gen_expr(e[3]))
     raise SyntaxError('clic: bad expr node %r' % (t,))
 
 

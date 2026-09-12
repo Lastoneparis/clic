@@ -1,0 +1,20 @@
+// lang9.clic — demonstrates the ternary operator and the f16 (half) type,
+// both executed and verified on the GPU.
+
+// clamp x into [0,1] using nested ternaries (branchless, no if).
+kernel clamp01(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        let v = x[i];
+        y[i] = (v < 0.0) ? 0.0 : ((v > 1.0) ? 1.0 : v);
+    }
+}
+
+// compute in half precision (f16), I/O in f32: y = float(half(x) * 2).
+kernel scale_half(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        var v: f16 = half(x[i]);
+        y[i] = float(v * half(2.0));
+    }
+}

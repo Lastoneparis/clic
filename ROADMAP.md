@@ -9,9 +9,10 @@ Worked through iteratively. Checked = done & pushed.
 - [x] `while` loops, `break`, `continue`
 - [x] compound assignment (`+= -= *= /= %= &= |= ^= <<= >>=`)
 - [ ] `const` global constants
-- [ ] `f16` (half) and `i8`/`u8` types — quantized AI
+- [x] `f16` (half) type — verified on GPU (`examples/lang9.clic`)
+- [x] ternary `cond ? a : b` — verified on GPU
+- [ ] `i8`/`u8` types — quantized AI
 - [ ] vector types (`f32x4`) + swizzles
-- [ ] ternary `cond ? a : b`
 
 ## Standard library
 - [x] activations (relu, leaky_relu, sigmoid, gelu)

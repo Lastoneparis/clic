@@ -31,6 +31,7 @@ kernel apply(n: i32, k: f32, x: buffer<f32>) {
 |------|---------|
 | `i32`, `u32` | 32-bit signed / unsigned integer |
 | `f32` | 32-bit float |
+| `f16` | 16-bit float (half) — for quantized/AI compute |
 | `bool` | boolean |
 | `buffer<T>` | a pointer to global memory (kernel/fn parameter) |
 | `array<T, N>` | a thread-local fixed array |
@@ -65,7 +66,8 @@ Operators, tightest-binding first:
 &        ^        |        &&        ||
 ```
 
-Unary: `-x`, `!x`, `~x`. Indexing `a[i]`, member `v.x`, calls `f(a, b)`.
+Unary: `-x`, `!x`, `~x`. Conditional (ternary): `cond ? a : b`.
+Indexing `a[i]`, member `v.x`, calls `f(a, b)`.
 
 ## Built-in functions
 

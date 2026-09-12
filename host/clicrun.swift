@@ -129,6 +129,11 @@ for (idx, b) in bindings.enumerated() where b.kind == "buffer" {
         for i in 0..<b.len { arr[i] = Float.random(in: 0..<1, using: &rng) }
         hostF[b.name] = arr
         _ = arr.withUnsafeBytes { memcpy(buf.contents(), $0.baseAddress!, bytes) }
+    case "wide":                                   // [-1, 2): exercises clamps/branches
+        var arr = [Float](repeating: 0, count: b.len)
+        for i in 0..<b.len { arr[i] = Float.random(in: -1..<2, using: &rng) }
+        hostF[b.name] = arr
+        _ = arr.withUnsafeBytes { memcpy(buf.contents(), $0.baseAddress!, bytes) }
     case "sha256_k":
         hostU[b.name] = SHA_K
         _ = SHA_K.withUnsafeBytes { memcpy(buf.contents(), $0.baseAddress!, bytes) }
@@ -274,6 +279,22 @@ if verify == "saxpy" {
         }
     }
     verifyMsg = (maxRel <= 1e-2 ? "PASS" : "FAIL") + String(format: " (rel %.1e)", maxRel)
+} else if verify == "clamp01" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    var maxErr = 0.0
+    for i in stride(from: 0, to: n, by: max(1, n / 4096)) {
+        let ref = min(max(x[i], 0), 1)             // reference clamp
+        maxErr = max(maxErr, Double(abs(y[i] - ref)))
+    }
+    verifyMsg = (maxErr <= 1e-6 ? "PASS" : "FAIL") + String(format: " (max err %.1e, ternary)", maxErr)
+} else if verify == "scale_half" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    var maxRel = 0.0
+    for i in stride(from: 0, to: n, by: max(1, n / 4096)) {
+        let ref = Float(Float16(x[i])) * 2.0       // half-rounded reference
+        if ref != 0 { maxRel = max(maxRel, Double(abs(y[i] - ref) / abs(ref))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, f16 compute)", maxRel)
 } else if verify == "collatz" {
     let base = UInt32(truncatingIfNeeded: Int(scalar("base")))
     let n = Int(scalar("n"))

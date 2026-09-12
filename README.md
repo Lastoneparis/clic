@@ -147,6 +147,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 - [x] Device functions + `include`; a stdlib (activations) + a fused NN layer
 - [x] Full control flow: `while`, `break`/`continue`, compound assignment
 - [x] Parallel reduction (tree sum) + a step-by-step TUTORIAL
+- [x] Ternary operator + `f16` (half) type — verified on GPU
 - [x] AI library: softmax + layernorm (transformer building blocks)
 - [x] Python host API — run a clic kernel from Python in a few lines
 - [ ] A dedicated clic IR (decouple the front-end from backends)
