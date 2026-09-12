@@ -154,6 +154,15 @@ Contributions and ideas welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 The bigger vision — a European fabless AI-inference accelerator built on this
 open stack — is in [PITCH.md](PITCH.md) and [docs/FUNDRAISING.md](docs/FUNDRAISING.md).
 
+**Toward silicon — `clic-A1`:** the accelerator this stack compiles to, with a
+de-risked path from FPGA to an FD-SOI MPW tape-out:
+[architecture](docs/hardware/ARCHITECTURE.md) ·
+[ISA](docs/hardware/ISA.md) ·
+[MVP silicon](docs/hardware/MVP-SILICON.md) ·
+[ASIC flow](docs/hardware/ASIC-FLOW.md) ·
+[MPW shuttle & process](docs/hardware/MPW-SHUTTLE.md) ·
+[hardware roadmap](docs/hardware/HARDWARE-ROADMAP.md).
+
 ## License
 
 [MIT](LICENSE) © 2026 Hugo Moriceau
