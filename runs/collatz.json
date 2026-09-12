@@ -1,0 +1,13 @@
+{
+  "kernel": "collatz",
+  "metal": "../build/collatz.metal",
+  "grid": [1048576, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 50,
+  "verify": "collatz",
+  "bindings": [
+    { "name": "base", "kind": "scalar", "type": "u32", "value": 1 },
+    { "name": "n",    "kind": "scalar", "type": "i32", "value": 1048576 },
+    { "name": "out",  "kind": "buffer", "type": "u32", "len": 1048576, "init": "zero" }
+  ]
+}

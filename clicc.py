@@ -22,7 +22,8 @@ import argparse
 # --------------------------------------------------------------------------
 # Lexer
 # --------------------------------------------------------------------------
-KEYWORDS = {'kernel', 'fn', 'let', 'var', 'if', 'else', 'for', 'array', 'threadgroup',
+KEYWORDS = {'kernel', 'fn', 'let', 'var', 'if', 'else', 'for', 'while',
+            'break', 'continue', 'array', 'threadgroup',
             'buffer', 'return', 'i32', 'f32', 'u32', 'bool', 'true', 'false'}
 
 # Order matters: comments/whitespace before operators, floats before ints.
@@ -32,7 +33,7 @@ TOKEN_SPEC = [
     ('FLOAT',   r'\d+\.\d+([eE][+-]?\d+)?|\d+[eE][+-]?\d+'),
     ('INT',     r'\d+'),
     ('ID',      r'[A-Za-z_][A-Za-z0-9_]*'),
-    ('OP',      r'<<|>>|->|<=|>=|==|!=|&&|\|\||[-+*/%<>=!.,;:()\[\]{}&|^~]'),
+    ('OP',      r'<<=|>>=|<<|>>|->|<=|>=|==|!=|&&|\|\||\+=|-=|\*=|/=|%=|&=|\^=|\|=|[-+*/%<>=!.,;:()\[\]{}&|^~]'),
 ]
 _MASTER = re.compile('|'.join('(?P<%s>%s)' % (n, p) for n, p in TOKEN_SPEC))
 
@@ -199,6 +200,12 @@ class Parser:
             return self.parse_if()
         if k == 'for':
             return self.parse_for()
+        if k == 'while':
+            return self.parse_while()
+        if k == 'break':
+            self.next(); self.eat(';'); return ('break',)
+        if k == 'continue':
+            self.next(); self.eat(';'); return ('continue',)
         if k == 'return':
             self.next()
             if self.at(';'):
@@ -210,13 +217,20 @@ class Parser:
         if k == '{':
             return self.parse_block()
         e = self.parse_expr()
-        if self.at('='):
-            self.next()
+        if self.peek().kind in _ASSIGN_OPS:
+            op = self.next().kind
             rhs = self.parse_expr()
             self.eat(';')
-            return ('assign', e, rhs)
+            return ('assign', e, op, rhs)
         self.eat(';')
         return ('exprstmt', e)
+
+    def parse_while(self):
+        self.eat('while')
+        self.eat('(')
+        cond = self.parse_expr()
+        self.eat(')')
+        return ('while', cond, self.parse_block())
 
     def parse_decl(self):
         kw = self.next().kind          # let | var
@@ -251,9 +265,11 @@ class Parser:
         cond = self.parse_expr()
         self.eat(';')
         lhs = self.parse_expr()
-        self.eat('=')
+        op = self.next().kind
+        if op not in _ASSIGN_OPS:
+            self.err('expected an assignment operator in for-step')
         rhs = self.parse_expr()
-        step = ('assign', lhs, rhs)
+        step = ('assign', lhs, op, rhs)
         self.eat(')')
         body = self.parse_block()
         return ('for', init, cond, step, body)
@@ -335,6 +351,7 @@ _TYMAP = {'i32': 'int', 'u32': 'uint', 'f32': 'float', 'bool': 'bool'}
 _BUILTINS = {'float', 'int', 'uint', 'min', 'max', 'abs', 'sqrt',
              'exp', 'log', 'pow', 'fma', 'floor', 'ceil', 'tanh', 'clamp'}
 _USER_FNS = set()      # names of user-defined fns (populated per compile)
+_ASSIGN_OPS = {'=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>='}
 
 
 def _cscalar(ty):
@@ -400,7 +417,14 @@ def gen_stmt(s, ind):
             return '%s%s %s;' % (pad, cty, name)
         return '%s%s %s = %s;' % (pad, cty, name, gen_expr(e))
     if t == 'assign':
-        return '%s%s = %s;' % (pad, gen_expr(s[1]), gen_expr(s[2]))
+        return '%s%s %s %s;' % (pad, gen_expr(s[1]), s[2], gen_expr(s[3]))
+    if t == 'break':
+        return '%sbreak;' % pad
+    if t == 'continue':
+        return '%scontinue;' % pad
+    if t == 'while':
+        return '%swhile (%s) {\n%s\n%s}' % (pad, gen_expr(s[1]),
+                                            gen_block(s[2], ind + 1), pad)
     if t == 'exprstmt':
         return '%s%s;' % (pad, gen_expr(s[1]))
     if t == 'return':
@@ -420,7 +444,7 @@ def gen_stmt(s, ind):
     if t == 'for':
         _, init, cond, step, body = s
         init_s = gen_stmt(init, 0).strip().rstrip(';')
-        step_s = '%s = %s' % (gen_expr(step[1]), gen_expr(step[2]))
+        step_s = '%s %s %s' % (gen_expr(step[1]), step[2], gen_expr(step[3]))
         return '%sfor (%s; %s; %s) {\n%s\n%s}' % (
             pad, init_s, gen_expr(cond), step_s, gen_block(body, ind + 1), pad)
     raise SyntaxError('clic: bad stmt node %r' % (t,))

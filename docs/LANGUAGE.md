@@ -49,8 +49,10 @@ kernel apply(n: i32, k: f32, x: buffer<f32>) {
 - `let name = expr;` / `let name: T = expr;` — immutable binding
 - `var name: T = expr;` / `var name: T;` — mutable; arrays declared without init
 - `name = expr;` and `a[i] = expr;` — assignment
+- compound assignment: `+= -= *= /= %= &= |= ^= <<= >>=`
 - `if (cond) { ... } else { ... }`
 - `for (var i: i32 = 0; i < n; i = i + 1) { ... }`
+- `while (cond) { ... }`, with `break;` and `continue;`
 - `return expr;` (in functions)
 - `barrier();` — threadgroup synchronization
 

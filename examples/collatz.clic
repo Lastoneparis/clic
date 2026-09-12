@@ -1,0 +1,27 @@
+// collatz.clic — each thread counts Collatz steps for its own number.
+//
+// Exercises the new control flow: `while (true) { ... break ... }` and
+// compound assignment (`/=`, `+=`). For n = base+i, repeatedly apply
+// n -> n/2 (even) or 3n+1 (odd) and count steps to reach 1. Uses 32-bit
+// wraparound arithmetic (a step cap keeps it bounded); verified on the host
+// with matching UInt32 arithmetic.
+
+kernel collatz(base: u32, n: i32, out: buffer<u32>) {
+    let i = tid.x;
+    if (i < n) {
+        var x = base + uint(i);
+        if (x == uint(0)) { x = uint(1); }
+        var steps = uint(0);
+        while (true) {
+            if (x <= uint(1)) { break; }
+            if (steps >= uint(2000)) { break; }
+            if (x % uint(2) == uint(0)) {
+                x /= uint(2);
+            } else {
+                x = uint(3) * x + uint(1);
+            }
+            steps += uint(1);
+        }
+        out[i] = steps;
+    }
+}

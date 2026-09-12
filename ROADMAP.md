@@ -1,0 +1,39 @@
+# clic roadmap — the path to a serious, open CUDA alternative
+
+Worked through iteratively. Checked = done & pushed.
+
+## Language completeness
+- [x] kernels, `fn`, `include`, types (i32/u32/f32/bool/buffer/array)
+- [x] if/else, for, arithmetic/logical/bitwise ops, indexing, calls
+- [x] threadgroup memory, `barrier()`, `ltid`/`bid`
+- [x] `while` loops, `break`, `continue`
+- [x] compound assignment (`+= -= *= /= %= &= |= ^= <<= >>=`)
+- [ ] `const` global constants
+- [ ] `f16` (half) and `i8`/`u8` types — quantized AI
+- [ ] vector types (`f32x4`) + swizzles
+- [ ] ternary `cond ? a : b`
+
+## Standard library
+- [x] activations (relu, leaky_relu, sigmoid, gelu)
+- [ ] reductions (sum/max) + prefix sum
+- [ ] softmax, layernorm
+- [ ] more math (tanh already; add erf, rsqrt helpers)
+- [ ] crypto: sha256 as a callable module; keccak
+
+## Manual & docs
+- [x] LANGUAGE.md reference
+- [ ] TUTORIAL.md — write your first kernel, step by step
+- [ ] MANIFESTS.md — the run-manifest format
+- [ ] COMPARISON.md — clic vs CUDA (honest positioning)
+- [ ] examples gallery in the README
+
+## Adoption / "serious competitor" paths
+- [ ] Python host API (`import clic`; run a kernel in 3 lines)
+- [ ] a `clic` CLI (`clic build`, `clic run`)
+- [ ] a dedicated clic IR (decouple front-end from backends)
+- [ ] FPGA (ECP5) backend — the sovereignty story
+- [ ] benchmark suite vs baselines
+
+## Honesty
+clic is not "faster than CUDA" — speed is silicon. clic competes on being
+open, portable, clean, and a path to hardware you control.

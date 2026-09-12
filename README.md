@@ -120,6 +120,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 - [x] SHA-256 verified vs Apple CryptoKit, plus a mining scan
 - [x] Triangle rasterizer — a shaded 3D cube (graphics path started)
 - [x] Device functions + `include`; a stdlib (activations) + a fused NN layer
+- [x] Full control flow: `while`, `break`/`continue`, compound assignment
 - [ ] A dedicated clic IR (decouple the front-end from backends)
 - [ ] The **FPGA backend** — target the Lattice ECP5 (ULX3S) over USB
 - [ ] Textured / perspective-correct triangles; animation

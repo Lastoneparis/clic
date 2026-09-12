@@ -219,6 +219,24 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "collatz" {
+    let base = UInt32(truncatingIfNeeded: Int(scalar("base")))
+    let n = Int(scalar("n"))
+    let out = bufU("out")
+    var checks = 0, oks = 0
+    for id in stride(from: 0, to: n, by: max(1, n / 2000)) {
+        var x = base &+ UInt32(id)
+        if x == 0 { x = 1 }
+        var steps: UInt32 = 0
+        while true {
+            if x <= 1 { break }
+            if steps >= 2000 { break }
+            if x % 2 == 0 { x /= 2 } else { x = 3 &* x &+ 1 }
+            steps &+= 1
+        }
+        checks += 1; if out[id] == steps { oks += 1 }
+    }
+    verifyMsg = (oks == checks ? "PASS" : "FAIL") + " (\(oks)/\(checks) Collatz step counts)"
 } else if verify == "sha256" {
     let base = UInt32(truncatingIfNeeded: Int(scalar("base")))
     let out = bufU("out")
