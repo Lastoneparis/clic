@@ -29,7 +29,7 @@ Worked through iteratively. Checked = done & pushed.
 - [ ] examples gallery in the README
 
 ## Adoption / "serious competitor" paths
-- [ ] Python host API (`import clic`; run a kernel in 3 lines)
+- [x] Python host API (`import clic`; run a kernel in a few lines) — `python/`
 - [ ] a `clic` CLI (`clic build`, `clic run`)
 - [ ] a dedicated clic IR (decouple front-end from backends)
 - [ ] FPGA (ECP5) backend — the sovereignty story

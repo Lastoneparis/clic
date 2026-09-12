@@ -30,6 +30,7 @@ struct Binding {
     let len: Int          // buffer element count
     let initMode: String  // "random" | "zero" | "sha256_k" | "sha256_h"
     let data: [Float]?    // inline f32 contents (overrides initMode)
+    let dump: String?     // after the run, write this buffer's raw bytes here
 }
 
 func savePNG(buffer: MTLBuffer, width: Int, height: Int, path: String) {
@@ -68,7 +69,8 @@ guard let mdata = try? Data(contentsOf: manifestURL),
 else { fail("cannot read manifest \(manifestURL.path)") }
 
 let kernelName = json["kernel"] as! String
-let metalURL = baseDir.appendingPathComponent(json["metal"] as! String)
+let metalRel = json["metal"] as! String
+let metalURL = metalRel.hasPrefix("/") ? URL(fileURLWithPath: metalRel) : baseDir.appendingPathComponent(metalRel)
 guard let metalSrc = try? String(contentsOf: metalURL, encoding: .utf8)
 else { fail("cannot read metal \(metalURL.path)") }
 
@@ -88,7 +90,8 @@ for b in (json["bindings"] as! [[String: Any]]) {
         value: ((b["value"] as? NSNumber)?.doubleValue) ?? 0,
         len: (b["len"] as? Int) ?? 0,
         initMode: (b["init"] as? String) ?? "zero",
-        data: (b["data"] as? [Any])?.compactMap { ($0 as? NSNumber)?.floatValue }))
+        data: (b["data"] as? [Any])?.compactMap { ($0 as? NSNumber)?.floatValue },
+        dump: b["dump"] as? String))
 }
 
 // ---- Metal setup ----------------------------------------------------------
@@ -344,6 +347,14 @@ if let im = json["image"] as? [String: Any], let bname = im["buffer"] as? String
     let outURL = rel.hasPrefix("/") ? URL(fileURLWithPath: rel) : baseDir.appendingPathComponent(rel)
     savePNG(buffer: gpuBuffers[bidx]!, width: w, height: h, path: outURL.path)
     imageLine = "image     : \(outURL.path)"
+}
+
+// ---- dump output buffers (for the Python host API) ------------------------
+for (idx, b) in bindings.enumerated() where b.kind == "buffer" {
+    if let path = b.dump, let buf = gpuBuffers[idx] {
+        let data = Data(bytes: buf.contents(), count: b.len * 4)
+        try? data.write(to: URL(fileURLWithPath: path))
+    }
 }
 
 // ---- report ---------------------------------------------------------------

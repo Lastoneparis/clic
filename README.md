@@ -73,6 +73,18 @@ Each kernel prints its throughput and a correctness check. New here? Walk
 through **[docs/TUTORIAL.md](docs/TUTORIAL.md)** — write and run your own kernel
 in a few minutes.
 
+## From Python
+
+Run a kernel on the GPU in a few lines — no Metal boilerplate ([python/](python/)):
+
+```python
+import clic
+out = clic.run("examples/saxpy.clic", "saxpy", grid=[8, 1, 1],
+               values={"n": 8, "a": 3.0, "x": [0,1,2,3,4,5,6,7], "y": [10]*8},
+               read=["y"])
+print(out["y"])   # [10.0, 13.0, 16.0, 19.0, 22.0, 25.0, 28.0, 31.0]
+```
+
 ## The language, at a glance
 
 `tid.x` is the global thread index — no block math to get wrong:
@@ -111,6 +123,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 | `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `linear_relu`, `reduce`, `nn` (softmax/layernorm), `collatz`, `sha256`, `raster` |
 | `lib/*.clic` | Standard library (activation functions) |
 | `host/clicrun.swift` | Metal runtime + benchmark & verification harness |
+| `python/clic.py` | Python host API — run a kernel from Python |
 | `raster_scene.py` | Host-side geometry (the "vertex stage") for the rasterizer |
 | `runs/*.json` | Run manifests (sizes, grid, buffers) |
 | `docs/LANGUAGE.md` | The language reference · `tests/` | CI compile checks |
@@ -125,6 +138,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 - [x] Full control flow: `while`, `break`/`continue`, compound assignment
 - [x] Parallel reduction (tree sum) + a step-by-step TUTORIAL
 - [x] AI library: softmax + layernorm (transformer building blocks)
+- [x] Python host API — run a clic kernel from Python in a few lines
 - [ ] A dedicated clic IR (decouple the front-end from backends)
 - [ ] The **FPGA backend** — target the Lattice ECP5 (ULX3S) over USB
 - [ ] Textured / perspective-correct triangles; animation
