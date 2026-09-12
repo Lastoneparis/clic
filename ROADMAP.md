@@ -32,6 +32,9 @@ Worked through iteratively. Checked = done & pushed.
 - [x] Python host API (`import clic`; run a kernel in a few lines) — `python/`
 - [ ] a `clic` CLI (`clic build`, `clic run`)
 - [ ] a dedicated clic IR (decouple front-end from backends)
+- [x] RTL compute core — synthesizable `N×N` systolic MAC array, verified in
+      simulation (`rtl/`) — the first FPGA→ASIC artifact
+- [ ] Wrap RTL with clic-ISA sequencer + SRAM; map to the ULX3S; measure perf/watt
 - [ ] FPGA (ECP5) backend — the sovereignty story
 - [ ] benchmark suite vs baselines
 

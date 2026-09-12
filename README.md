@@ -163,6 +163,10 @@ de-risked path from FPGA to an FD-SOI MPW tape-out:
 [MPW shuttle & process](docs/hardware/MPW-SHUTTLE.md) ·
 [hardware roadmap](docs/hardware/HARDWARE-ROADMAP.md).
 
+The compute core is real, not just specified: [`rtl/`](rtl/) has a
+synthesizable **systolic MAC array** in Verilog, verified in simulation against
+a CPU reference (`./rtl/sim.sh`).
+
 ## License
 
 [MIT](LICENSE) © 2026 Hugo Moriceau
