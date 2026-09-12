@@ -9,6 +9,8 @@ real step from FPGA prototype toward an [ASIC tape-out](../docs/hardware/ASIC-FL
 | `pe.v` | one processing element: an INT8 multiply-accumulate cell (Verilog-2001, synthesizable) |
 | `systolic.v` | an `N×N` output-stationary systolic array computing `C = A·B` |
 | `gemm_accel.v` | **the accelerator block**: on-chip SRAM + control FSM (hardware skewing) + host load/read port wrapping the array (the gen-1 MVP cluster shape) |
+| `mac4.v` | packed **INT4** MAC — 2 INT4 multiply-accumulates per cycle (the 2× INT4 mode; verified) |
+| `tb_mac4.sv` | self-checking testbench for the INT4 packed MAC |
 | `tb_systolic.sv` | self-checking testbench for the array |
 | `tb_gemm_accel.sv` | self-checking testbench for the block: host-loads A/B, runs, reads C, compares |
 | `sim.sh` | build + run both simulations |
