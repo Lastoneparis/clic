@@ -166,8 +166,10 @@ to an FD-SOI MPW tape-out:
 [hardware roadmap](docs/hardware/HARDWARE-ROADMAP.md).
 
 The compute core is real, not just specified: [`rtl/`](rtl/) has a
-synthesizable **systolic MAC array** in Verilog, verified in simulation against
-a CPU reference (`./rtl/sim.sh`).
+synthesizable **systolic MAC array** + a full **GEMM accelerator block** (SRAM +
+control FSM + host port) in Verilog, verified in simulation (`./rtl/sim.sh`) and
+**synthesized to the ECP5** — it fits the ULX3S 85F (a 12×12 = 144-MAC cluster),
+DSP-mapped ([synthesis results](docs/hardware/SYNTHESIS.md)).
 
 ## License
 

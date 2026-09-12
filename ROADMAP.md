@@ -36,7 +36,9 @@ Worked through iteratively. Checked = done & pushed.
       simulation (`rtl/`) — the first FPGA→ASIC artifact
 - [x] Wrap RTL into a GEMM accelerator block: SRAM + control FSM (HW skewing) +
       host load/read port, verified in sim (`rtl/gemm_accel.v`)
-- [ ] Map the block to the ULX3S FPGA; measure real perf/watt
+- [x] ECP5 synthesis (yosys `synth_ecp5`): DSP-mapped, fits ULX3S 85F
+      (12×12 = 144-MAC cluster; `docs/hardware/SYNTHESIS.md`)
+- [ ] Place & route (nextpnr-ecp5) for Fmax; map to physical ULX3S; measure perf/watt
 - [ ] INT4 packed mode; DFT (scan + memory BIST) for tape-out
 - [ ] FPGA (ECP5) backend — the sovereignty story
 - [ ] benchmark suite vs baselines
