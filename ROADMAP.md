@@ -12,7 +12,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] `f16` (half) type — verified on GPU (`examples/lang9.clic`)
 - [x] ternary `cond ? a : b` — verified on GPU
 - [x] `i8`/`u8` types — quantized AI — verified on GPU (`examples/quant.clic`)
-- [ ] vector types (`f32x4`) + swizzles
+- [x] vector type `f32x4` + swizzles — verified on GPU (`examples/vec4.clic`)
 
 ## Standard library
 - [x] activations (relu, leaky_relu, sigmoid, gelu)

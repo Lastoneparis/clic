@@ -33,6 +33,7 @@ kernel apply(n: i32, k: f32, x: buffer<f32>) {
 | `i8`, `u8` | 8-bit signed / unsigned integer — quantized inference |
 | `f32` | 32-bit float |
 | `f16` | 16-bit float (half) — for quantized/AI compute |
+| `f32x4` | 4-wide float vector (SIMD `float4`) — `float4(a,b,c,d)`, `.x/.y/.z/.w`, per-lane ops |
 | `bool` | boolean |
 | `buffer<T>` | a pointer to global memory (kernel/fn parameter) |
 | `array<T, N>` | a thread-local fixed array |

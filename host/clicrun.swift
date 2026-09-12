@@ -329,6 +329,14 @@ if verify == "saxpy" {
         }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, attention)", maxRel)
+} else if verify == "vec4" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    var maxRel = 0.0
+    for i in stride(from: 0, to: n, by: max(1, n / 4096)) {
+        let ref = 2 * (x[i*4] + x[i*4+1] + x[i*4+2] + x[i*4+3])
+        if abs(ref) > 1e-4 { maxRel = max(maxRel, Double(abs(y[i] - ref) / abs(ref))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, f32x4)", maxRel)
 } else if verify == "scan" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var acc: Float = 0; var maxRel = 0.0

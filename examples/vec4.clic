@@ -1,0 +1,12 @@
+// vec4.clic — the f32x4 vector type (SIMD float4): construction, per-lane
+// multiply, and swizzle access. Packs 4 floats into one register for wide
+// arithmetic. Here: y[i] = sum of (2 * each lane) = 2*(x0+x1+x2+x3).
+
+kernel vec4_demo(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        var v: f32x4 = float4(x[i*4], x[i*4 + 1], x[i*4 + 2], x[i*4 + 3]);
+        var w = v * float4(2.0, 2.0, 2.0, 2.0);   // per-lane multiply
+        y[i] = w.x + w.y + w.z + w.w;              // swizzle access
+    }
+}

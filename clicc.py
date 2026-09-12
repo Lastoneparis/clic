@@ -24,7 +24,8 @@ import argparse
 # --------------------------------------------------------------------------
 KEYWORDS = {'kernel', 'fn', 'let', 'var', 'if', 'else', 'for', 'while',
             'break', 'continue', 'array', 'threadgroup',
-            'buffer', 'return', 'i32', 'f32', 'f16', 'u32', 'i8', 'u8', 'bool', 'true', 'false'}
+            'buffer', 'return', 'i32', 'f32', 'f16', 'u32', 'i8', 'u8', 'f32x4',
+            'bool', 'true', 'false'}
 
 # Order matters: comments/whitespace before operators, floats before ints.
 TOKEN_SPEC = [
@@ -178,7 +179,7 @@ class Parser:
             size = int(self.eat('INT').val)
             self.eat('>')
             return ('array', elem, size, 'thread')
-        if t.kind in ('i32', 'f32', 'f16', 'u32', 'i8', 'u8', 'bool'):
+        if t.kind in ('i32', 'f32', 'f16', 'u32', 'i8', 'u8', 'f32x4', 'bool'):
             self.next()
             return ('scalar', t.kind)
         self.err('expected a type (i32/f32/u32/bool/buffer<..>/array<T,N>)')
@@ -354,11 +355,11 @@ class Parser:
 # Code generation:  clic AST -> Metal Shading Language
 # --------------------------------------------------------------------------
 _TYMAP = {'i32': 'int', 'u32': 'uint', 'f32': 'float', 'f16': 'half',
-          'i8': 'char', 'u8': 'uchar', 'bool': 'bool'}
+          'i8': 'char', 'u8': 'uchar', 'f32x4': 'float4', 'bool': 'bool'}
 # builtin functions passed straight through to MSL
-_BUILTINS = {'float', 'int', 'uint', 'half', 'char', 'uchar', 'min', 'max', 'abs',
-             'sqrt', 'exp', 'log', 'pow', 'fma', 'floor', 'ceil', 'tanh', 'clamp',
-             'round'}
+_BUILTINS = {'float', 'int', 'uint', 'half', 'char', 'uchar', 'float4', 'dot',
+             'min', 'max', 'abs', 'sqrt', 'exp', 'log', 'pow', 'fma', 'floor',
+             'ceil', 'tanh', 'clamp', 'round'}
 _USER_FNS = set()      # names of user-defined fns (populated per compile)
 _ASSIGN_OPS = {'=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>='}
 
