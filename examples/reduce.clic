@@ -1,0 +1,30 @@
+// reduce.clic — parallel sum reduction. The other fundamental GPU pattern.
+//
+// After "map" (one output per thread), "reduce" (combine many values into one)
+// is the pattern every serious workload needs — it's how you sum a vector,
+// pool a tensor, or compute a norm. Each threadgroup loads 256 values into
+// shared memory and tree-reduces them to a single partial sum; the host adds
+// the partials. Uses threadgroup memory, `barrier()`, `while`, and `/=`.
+
+kernel reduce_sum(n: i32, x: buffer<f32>, partials: buffer<f32>) {
+    var scratch: threadgroup array<f32, 256>;
+    let lx = ltid.x;
+    let gi = tid.x;
+
+    if (gi < n) { scratch[lx] = x[gi]; } else { scratch[lx] = 0.0; }
+    barrier();
+
+    // tree reduction: 256 -> 128 -> ... -> 1
+    var stride = 128;
+    while (stride > 0) {
+        if (lx < stride) {
+            scratch[lx] = scratch[lx] + scratch[lx + stride];
+        }
+        barrier();
+        stride /= 2;
+    }
+
+    if (lx == 0) {
+        partials[bid.x] = scratch[0];
+    }
+}

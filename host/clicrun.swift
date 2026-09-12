@@ -219,6 +219,17 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "reduce_sum" {
+    let n = Int(scalar("n"))
+    let x = hostF["x"]!
+    let partials = bufF("partials")
+    let np = bindings.first(where: { $0.name == "partials" })!.len
+    var gpu = 0.0
+    for i in 0..<np { gpu += Double(partials[i]) }
+    var ref = 0.0
+    for i in 0..<n { ref += Double(x[i]) }
+    let rel = ref != 0 ? abs(gpu - ref) / abs(ref) : abs(gpu)
+    verifyMsg = (rel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (sum rel err %.2e)", rel)
 } else if verify == "collatz" {
     let base = UInt32(truncatingIfNeeded: Int(scalar("base")))
     let n = Int(scalar("n"))

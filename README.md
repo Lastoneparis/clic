@@ -69,7 +69,9 @@ cd clic
 ./run.sh          # compiles every kernel and runs it on your GPU
 ```
 
-Each kernel prints its throughput and a correctness check.
+Each kernel prints its throughput and a correctness check. New here? Walk
+through **[docs/TUTORIAL.md](docs/TUTORIAL.md)** — write and run your own kernel
+in a few minutes.
 
 ## The language, at a glance
 
@@ -106,7 +108,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 | Path | What |
 |------|------|
 | `clicc.py` | The compiler: clic → Metal (lexer, parser, codegen) |
-| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `linear_relu`, `sha256`, `raster` |
+| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `linear_relu`, `reduce`, `collatz`, `sha256`, `raster` |
 | `lib/*.clic` | Standard library (activation functions) |
 | `host/clicrun.swift` | Metal runtime + benchmark & verification harness |
 | `raster_scene.py` | Host-side geometry (the "vertex stage") for the rasterizer |
@@ -121,6 +123,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 - [x] Triangle rasterizer — a shaded 3D cube (graphics path started)
 - [x] Device functions + `include`; a stdlib (activations) + a fused NN layer
 - [x] Full control flow: `while`, `break`/`continue`, compound assignment
+- [x] Parallel reduction (tree sum) + a step-by-step TUTORIAL
 - [ ] A dedicated clic IR (decouple the front-end from backends)
 - [ ] The **FPGA backend** — target the Lattice ECP5 (ULX3S) over USB
 - [ ] Textured / perspective-correct triangles; animation

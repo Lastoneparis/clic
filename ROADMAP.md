@@ -15,14 +15,15 @@ Worked through iteratively. Checked = done & pushed.
 
 ## Standard library
 - [x] activations (relu, leaky_relu, sigmoid, gelu)
-- [ ] reductions (sum/max) + prefix sum
+- [x] reductions (parallel tree sum) — `examples/reduce.clic`
+- [ ] reduction: max + prefix sum (scan)
 - [ ] softmax, layernorm
 - [ ] more math (tanh already; add erf, rsqrt helpers)
 - [ ] crypto: sha256 as a callable module; keccak
 
 ## Manual & docs
 - [x] LANGUAGE.md reference
-- [ ] TUTORIAL.md — write your first kernel, step by step
+- [x] TUTORIAL.md — write your first kernel, step by step
 - [ ] MANIFESTS.md — the run-manifest format
 - [ ] COMPARISON.md — clic vs CUDA (honest positioning)
 - [ ] examples gallery in the README

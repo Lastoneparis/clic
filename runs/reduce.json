@@ -1,0 +1,13 @@
+{
+  "kernel": "reduce_sum",
+  "metal": "../build/reduce.metal",
+  "grid": [1048576, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 100,
+  "verify": "reduce_sum",
+  "bindings": [
+    { "name": "n",        "kind": "scalar", "type": "i32", "value": 1048576 },
+    { "name": "x",        "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "partials", "kind": "buffer", "type": "f32", "len": 4096,    "init": "zero" }
+  ]
+}
