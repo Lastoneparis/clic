@@ -48,15 +48,16 @@ makes non-NVIDIA hardware usable.
 
 | Workload | Kernel | Result | Verified against |
 |---|---|---|---|
-| 🧠 **AI** | `gemm_tiled` (1024³, shared memory) | **872 GFLOP/s** | CPU reference |
-| 🧠 AI | `linear_relu` (fused matmul + bias + ReLU) | 505 GFLOP/s | CPU reference |
-| 🧠 AI | `gemm` (1024³, naive) | 477 GFLOP/s | CPU reference |
-| 🔐 **Hash** | `sha256` (1M nonces) | **836 MH/s** | Apple CryptoKit |
-| 🎮 **Graphics** | `raster` (512², shaded cube) | ~3,200 fps | *(the GIF above)* |
+| 🧠 **AI** | `gemm_tiled` (1024³, shared memory) | **~864 GFLOP/s** | CPU reference |
+| 🧠 AI | `linear_relu` / `linear` (dense layer) | ~508 GFLOP/s | CPU reference |
+| 🧠 AI | `attention` (scaled dot-product) | verified | CPU reference |
+| 🔐 **Hash** | `sha256` (1M nonces) | **~889 MH/s** | Apple CryptoKit |
+| 🎮 **Graphics** | `raster` (512², shaded cube) | ~5,700 fps | *(the GIF above)* |
 
 The tiled GEMM is **1.8× faster** than the naive one — same language, real GPU
 optimization (shared memory + barriers). The SHA-256 runtime also scans its
-range for the "hardest" hash — a real mining primitive.
+range for the "hardest" hash — a real mining primitive. **Full, current table
+for all 15 kernels: [docs/BENCHMARKS.md](docs/BENCHMARKS.md).**
 
 ## Quick start
 
