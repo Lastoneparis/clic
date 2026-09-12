@@ -1,0 +1,17 @@
+{
+  "kernel": "gemm_i8",
+  "metal": "../build/gemm_i8.metal",
+  "grid": [512, 512, 1],
+  "threadgroup": [16, 16, 1],
+  "iters": 50,
+  "flops": 268435456,
+  "verify": "gemm_i8",
+  "bindings": [
+    { "name": "M", "kind": "scalar", "type": "i32", "value": 512 },
+    { "name": "N", "kind": "scalar", "type": "i32", "value": 512 },
+    { "name": "K", "kind": "scalar", "type": "i32", "value": 512 },
+    { "name": "A", "kind": "buffer", "type": "f32", "len": 262144, "init": "int8" },
+    { "name": "B", "kind": "buffer", "type": "f32", "len": 262144, "init": "int8" },
+    { "name": "C", "kind": "buffer", "type": "f32", "len": 262144, "init": "zero" }
+  ]
+}

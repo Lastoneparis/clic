@@ -1,0 +1,20 @@
+// gemm_i8.clic — INT8 matrix multiply with INT32 accumulation.
+//   C = A · B, where A,B are INT8 and the accumulator is INT32.
+// This is exactly the datapath clic-A1 / OSHI-A1 runs in silicon (INT8 MACs
+// into a wide accumulator). Inputs arrive as f32 holding integer values and are
+// cast to i8; the result is written back as f32.
+
+kernel gemm_i8(M: i32, N: i32, K: i32,
+               A: buffer<f32>, B: buffer<f32>, C: buffer<f32>) {
+    let row = tid.y;
+    let col = tid.x;
+    if (row < M && col < N) {
+        var acc: i32 = 0;
+        for (var k: i32 = 0; k < K; k = k + 1) {
+            var a: i8 = char(A[row * K + k]);
+            var b: i8 = char(B[k * N + col]);
+            acc = acc + int(a) * int(b);         // INT8 * INT8 -> INT32 accumulate
+        }
+        C[row * N + col] = float(acc);
+    }
+}

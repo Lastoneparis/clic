@@ -135,7 +135,7 @@ crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
 | Path | What |
 |------|------|
 | `clicc.py` | The compiler: clic → Metal (lexer, parser, codegen) |
-| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `linear_relu`, `reduce`, `scan`, `nn` (softmax/layernorm), `attention`, `conv2d`, `quant` (INT8), `collatz`, `sha256`, `raster` |
+| `examples/*.clic` | Kernels: `saxpy`, `gemm`, `gemm_tiled`, `gemm_i8` (INT8), `linear_relu`, `reduce`, `scan`, `nn` (softmax/layernorm), `attention`, `conv2d`, `quant` (INT8), `collatz`, `sha256`, `raster` |
 | `lib/*.clic` | Standard library (activation functions) |
 | `host/clicrun.swift` | Metal runtime + benchmark & verification harness |
 | `python/clic.py` | Python host API — run a kernel from Python |

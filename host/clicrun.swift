@@ -134,6 +134,11 @@ for (idx, b) in bindings.enumerated() where b.kind == "buffer" {
         for i in 0..<b.len { arr[i] = Float.random(in: -1..<2, using: &rng) }
         hostF[b.name] = arr
         _ = arr.withUnsafeBytes { memcpy(buf.contents(), $0.baseAddress!, bytes) }
+    case "int8":                                   // [-8, 8): integer-valued for INT8 kernels
+        var arr = [Float](repeating: 0, count: b.len)
+        for i in 0..<b.len { arr[i] = Float.random(in: -8..<8, using: &rng) }
+        hostF[b.name] = arr
+        _ = arr.withUnsafeBytes { memcpy(buf.contents(), $0.baseAddress!, bytes) }
     case "sha256_k":
         hostU[b.name] = SHA_K
         _ = SHA_K.withUnsafeBytes { memcpy(buf.contents(), $0.baseAddress!, bytes) }
@@ -358,6 +363,17 @@ if verify == "saxpy" {
         if acc != 0 { maxRel = max(maxRel, Double(abs(Out[oy*OW + ox] - acc) / abs(acc))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, conv2d)", maxRel)
+} else if verify == "gemm_i8" {
+    let M = Int(scalar("M")); let N = Int(scalar("N")); let K = Int(scalar("K"))
+    let A = hostF["A"]!; let B = hostF["B"]!; let C = bufF("C")
+    var errs = 0, checks = 0
+    for _ in 0..<24 {
+        let r = Int.random(in: 0..<M), c = Int.random(in: 0..<N)
+        var acc: Int32 = 0
+        for k in 0..<K { acc += Int32(Int8(A[r*K+k])) * Int32(Int8(B[k*N+c])) }
+        checks += 1; if C[r*N+c] != Float(acc) { errs += 1 }
+    }
+    verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) INT8 GEMM elems exact)"
 } else if verify == "quant_i8" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var maxErr = 0.0

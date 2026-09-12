@@ -8,6 +8,7 @@ echo "==> [1/3] compiling clic kernels (clicc.py)"
 python3 clicc.py examples/saxpy.clic      -o build/saxpy.metal
 python3 clicc.py examples/gemm.clic       -o build/gemm.metal
 python3 clicc.py examples/gemm_tiled.clic  -o build/gemm_tiled.metal
+python3 clicc.py examples/gemm_i8.clic     -o build/gemm_i8.metal
 python3 clicc.py examples/linear_relu.clic -o build/linear_relu.metal
 python3 clicc.py examples/linear.clic      -o build/linear.metal
 python3 clicc.py examples/collatz.clic     -o build/collatz.metal
@@ -27,7 +28,7 @@ echo "==> [2/3] building GPU host (clicrun.swift)"
 swiftc -O host/clicrun.swift -o build/clicrun
 
 echo "==> [3/3] running on the GPU"
-for r in saxpy gemm gemm_tiled linear_relu linear reduce softmax layernorm attention conv2d scan vec4 clamp scale_half quant collatz sha256 raster; do
+for r in saxpy gemm gemm_tiled gemm_i8 linear_relu linear reduce softmax layernorm attention conv2d scan vec4 clamp scale_half quant collatz sha256 raster; do
     echo
     ./build/clicrun "runs/$r.json"
 done
