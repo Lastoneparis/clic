@@ -12,6 +12,7 @@ built to target FPGAs and custom silicon next.
 *A shaded 3D cube, rasterized pixel-by-pixel by a clic kernel on the GPU.*
 
 [![CI](https://github.com/Lastoneparis/clic/actions/workflows/ci.yml/badge.svg)](https://github.com/Lastoneparis/clic/actions/workflows/ci.yml)
+[![release](https://img.shields.io/github/v/release/Lastoneparis/clic)](https://github.com/Lastoneparis/clic/releases)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![backend](https://img.shields.io/badge/backend-Apple%20Metal-black)
 ![next](https://img.shields.io/badge/next-FPGA%20%2F%20silicon-8A2BE2)
