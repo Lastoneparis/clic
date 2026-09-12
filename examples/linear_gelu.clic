@@ -1,0 +1,19 @@
+// linear_gelu.clic — a fused transformer FFN layer:  C = gelu(A·B + bias)
+// Pairs with linear_relu; GELU is the activation in transformer feed-forward
+// blocks. Pulls the activation straight from the clic standard library.
+
+include "../lib/activations.clic"
+
+kernel linear_gelu(M: i32, N: i32, K: i32,
+                   A: buffer<f32>, B: buffer<f32>,
+                   bias: buffer<f32>, C: buffer<f32>) {
+    let row = tid.y;
+    let col = tid.x;
+    if (row < M && col < N) {
+        var acc: f32 = bias[col];
+        for (var k: i32 = 0; k < K; k = k + 1) {
+            acc = acc + A[row * K + k] * B[k * N + col];
+        }
+        C[row * N + col] = gelu(acc);
+    }
+}

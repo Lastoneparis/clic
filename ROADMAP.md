@@ -16,6 +16,7 @@ Worked through iteratively. Checked = done & pushed.
 
 ## Standard library
 - [x] activations (relu, leaky_relu, sigmoid, gelu)
+- [x] linear_gelu (transformer FFN: dense + bias + GELU) — `examples/linear_gelu.clic`
 - [x] reductions (parallel tree sum) — `examples/reduce.clic`
 - [x] prefix sum / inclusive scan (Hillis-Steele) — `examples/scan.clic`
 - [ ] reduction: max variant
