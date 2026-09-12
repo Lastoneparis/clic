@@ -1,0 +1,73 @@
+// sha256.clic  —  each thread computes a full SHA-256 hash of its own nonce.
+//
+// This is the "hash / hacking" workload: scanning a huge space of inputs and
+// hashing each one (exactly what password cracking and crypto mining do).
+// Thread `i` hashes the 4-byte value (base + i) and writes the 32-byte digest.
+// It's a REAL SHA-256 (message schedule + 64 compression rounds), verified on
+// the host against Apple's CryptoKit. FPGAs crush this per-watt — it'll be the
+// board's strongest demo later; here it proves clic's bitwise/rotate/array
+// features on the GPU.
+//
+// K   = the 64 SHA-256 round constants (filled by the host)
+// Hin = the 8 initial hash values     (filled by the host)
+// out = 8 words per thread (the digest)
+
+kernel sha256(base: u32, K: buffer<u32>, Hin: buffer<u32>, out: buffer<u32>) {
+    let id = tid.x;
+
+    // Build the single 512-bit padded block for a 4-byte message.
+    var w: array<u32, 64>;
+    w[0] = base + uint(id);          // the message: a 4-byte nonce
+    w[1] = uint(1) << 31;            // padding: the mandatory '1' bit
+    for (var i: i32 = 2; i < 15; i = i + 1) {
+        w[i] = uint(0);
+    }
+    w[15] = uint(32);                // message length in bits (4 bytes)
+
+    // Message schedule: extend the 16 words to 64.
+    for (var t: i32 = 16; t < 64; t = t + 1) {
+        var x  = w[t - 15];
+        var s0 = rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3);
+        var y  = w[t - 2];
+        var s1 = rotr(y, 17) ^ rotr(y, 19) ^ (y >> 10);
+        w[t] = w[t - 16] + s0 + w[t - 7] + s1;
+    }
+
+    // Working variables.
+    var a = Hin[0];
+    var b = Hin[1];
+    var c = Hin[2];
+    var d = Hin[3];
+    var e = Hin[4];
+    var f = Hin[5];
+    var g = Hin[6];
+    var h = Hin[7];
+
+    // 64 compression rounds.
+    for (var t: i32 = 0; t < 64; t = t + 1) {
+        var S1  = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+        var ch  = (e & f) ^ ((~e) & g);
+        var t1  = h + S1 + ch + K[t] + w[t];
+        var S0  = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+        var maj = (a & b) ^ (a & c) ^ (b & c);
+        var t2  = S0 + maj;
+        h = g;
+        g = f;
+        f = e;
+        e = d + t1;
+        d = c;
+        c = b;
+        b = a;
+        a = t1 + t2;
+    }
+
+    // Final digest = initial hash + working variables.
+    out[id * 8 + 0] = Hin[0] + a;
+    out[id * 8 + 1] = Hin[1] + b;
+    out[id * 8 + 2] = Hin[2] + c;
+    out[id * 8 + 3] = Hin[3] + d;
+    out[id * 8 + 4] = Hin[4] + e;
+    out[id * 8 + 5] = Hin[5] + f;
+    out[id * 8 + 6] = Hin[6] + g;
+    out[id * 8 + 7] = Hin[7] + h;
+}

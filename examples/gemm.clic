@@ -1,0 +1,17 @@
+// gemm.clic  —  C = A * B   (row-major, MxK times KxN = MxN)
+// This is the beating heart of neural networks: every dense layer, every
+// attention block, is matrix multiply. If clic can drive fast GEMM on our
+// hardware, it can run AI. Each thread computes one output element C[row,col].
+
+kernel gemm(M: i32, N: i32, K: i32,
+            A: buffer<f32>, B: buffer<f32>, C: buffer<f32>) {
+    let row = tid.y;
+    let col = tid.x;
+    if (row < M && col < N) {
+        var acc: f32 = 0.0;
+        for (var k: i32 = 0; k < K; k = k + 1) {
+            acc = acc + A[row * K + k] * B[k * N + col];
+        }
+        C[row * N + col] = acc;
+    }
+}

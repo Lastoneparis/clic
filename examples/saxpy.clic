@@ -1,0 +1,13 @@
+// saxpy.clic  —  y = a*x + y
+// The "hello world" of GPU compute. Proves the whole pipeline:
+//   clic source -> Metal -> runs on the M3 Pro GPU -> verified result.
+//
+// In CUDA you'd juggle blockIdx/blockDim/threadIdx. In clic, `tid.x` is the
+// global thread index directly.
+
+kernel saxpy(n: i32, a: f32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        y[i] = a * x[i] + y[i];
+    }
+}

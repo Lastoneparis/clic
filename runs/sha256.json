@@ -1,0 +1,14 @@
+{
+  "kernel": "sha256",
+  "metal": "../build/sha256.metal",
+  "grid": [1048576, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 50,
+  "verify": "sha256",
+  "bindings": [
+    { "name": "base", "kind": "scalar", "type": "u32", "value": 0 },
+    { "name": "K",    "kind": "buffer", "type": "u32", "len": 64,      "init": "sha256_k" },
+    { "name": "Hin",  "kind": "buffer", "type": "u32", "len": 8,       "init": "sha256_h" },
+    { "name": "out",  "kind": "buffer", "type": "u32", "len": 8388608, "init": "zero" }
+  ]
+}

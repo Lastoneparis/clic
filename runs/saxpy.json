@@ -1,0 +1,15 @@
+{
+  "kernel": "saxpy",
+  "metal": "../build/saxpy.metal",
+  "grid": [1048576, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 200,
+  "flops": 2097152,
+  "verify": "saxpy",
+  "bindings": [
+    { "name": "n", "kind": "scalar", "type": "i32", "value": 1048576 },
+    { "name": "a", "kind": "scalar", "type": "f32", "value": 2.0 },
+    { "name": "x", "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "y", "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" }
+  ]
+}
