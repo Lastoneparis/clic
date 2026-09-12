@@ -8,8 +8,10 @@ real step from FPGA prototype toward an [ASIC tape-out](../docs/hardware/ASIC-FL
 |------|------|
 | `pe.v` | one processing element: an INT8 multiply-accumulate cell (Verilog-2001, synthesizable) |
 | `systolic.v` | an `N×N` output-stationary systolic array computing `C = A·B` |
-| `tb_systolic.sv` | self-checking testbench: feeds skewed A/B, drains, compares every `C[i][j]` to a CPU reference |
-| `sim.sh` | build + run the simulation |
+| `gemm_accel.v` | **the accelerator block**: on-chip SRAM + control FSM (hardware skewing) + host load/read port wrapping the array (the gen-1 MVP cluster shape) |
+| `tb_systolic.sv` | self-checking testbench for the array |
+| `tb_gemm_accel.sv` | self-checking testbench for the block: host-loads A/B, runs, reads C, compares |
+| `sim.sh` | build + run both simulations |
 
 ## Run it
 
@@ -17,6 +19,7 @@ real step from FPGA prototype toward an [ASIC tape-out](../docs/hardware/ASIC-FL
 brew install icarus-verilog      # once
 ./rtl/sim.sh
 # -> PASS: 4x4 systolic GEMM matches CPU reference (16 elements)
+# -> PASS: gemm_accel block (load->run->read) matches CPU reference (16 elems)
 ```
 
 Parameterize with `N` (array size), `DW` (operand width, 8 = INT8), `ACCW`

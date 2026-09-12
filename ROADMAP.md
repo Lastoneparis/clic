@@ -34,7 +34,10 @@ Worked through iteratively. Checked = done & pushed.
 - [ ] a dedicated clic IR (decouple front-end from backends)
 - [x] RTL compute core — synthesizable `N×N` systolic MAC array, verified in
       simulation (`rtl/`) — the first FPGA→ASIC artifact
-- [ ] Wrap RTL with clic-ISA sequencer + SRAM; map to the ULX3S; measure perf/watt
+- [x] Wrap RTL into a GEMM accelerator block: SRAM + control FSM (HW skewing) +
+      host load/read port, verified in sim (`rtl/gemm_accel.v`)
+- [ ] Map the block to the ULX3S FPGA; measure real perf/watt
+- [ ] INT4 packed mode; DFT (scan + memory BIST) for tape-out
 - [ ] FPGA (ECP5) backend — the sovereignty story
 - [ ] benchmark suite vs baselines
 
