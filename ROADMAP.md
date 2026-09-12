@@ -17,7 +17,8 @@ Worked through iteratively. Checked = done & pushed.
 ## Standard library
 - [x] activations (relu, leaky_relu, sigmoid, gelu)
 - [x] reductions (parallel tree sum) — `examples/reduce.clic`
-- [ ] reduction: max + prefix sum (scan)
+- [x] prefix sum / inclusive scan (Hillis-Steele) — `examples/scan.clic`
+- [ ] reduction: max variant
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [x] scaled dot-product attention — `examples/attention.clic` (transformer core)
 - [x] conv2d — `examples/conv2d.clic` (CNN core)

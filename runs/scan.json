@@ -1,0 +1,13 @@
+{
+  "kernel": "scan",
+  "metal": "../build/scan.metal",
+  "grid": [256, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 50,
+  "verify": "scan",
+  "bindings": [
+    { "name": "n", "kind": "scalar", "type": "i32", "value": 256 },
+    { "name": "x", "kind": "buffer", "type": "f32", "len": 256, "init": "random" },
+    { "name": "y", "kind": "buffer", "type": "f32", "len": 256, "init": "zero" }
+  ]
+}

@@ -329,6 +329,14 @@ if verify == "saxpy" {
         }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, attention)", maxRel)
+} else if verify == "scan" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    var acc: Float = 0; var maxRel = 0.0
+    for i in 0..<n {
+        acc += x[i]
+        if acc != 0 { maxRel = max(maxRel, Double(abs(y[i] - acc) / abs(acc))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, inclusive scan)", maxRel)
 } else if verify == "conv2d" {
     let H = Int(scalar("H")); let W = Int(scalar("W"))
     let KH = Int(scalar("KH")); let KW = Int(scalar("KW"))

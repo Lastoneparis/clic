@@ -21,6 +21,7 @@ silicon.
 | `softmax_rows` | Transformer · softmax | 0.72 ms | — | CPU reference |
 | `layernorm_rows` | Transformer · layernorm | 0.62 ms | — | CPU reference |
 | `reduce_sum` | Reduction · tree sum | 0.34 ms | — | CPU (rel 1.4e-9) |
+| `scan` | Scan · inclusive prefix sum | <0.1 ms | — | CPU reference (4.5e-7) |
 | `quant_i8` | Quant · INT8 round-trip | 0.32 ms | — | Int8 reference (exact) |
 | `scale_half` | Precision · f16 compute | 0.34 ms | — | Float16 reference |
 | `clamp01` | Control · ternary | 0.33 ms | — | exact |

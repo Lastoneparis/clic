@@ -1,0 +1,25 @@
+// scan.clic — inclusive prefix sum (Hillis-Steele) within a threadgroup.
+//   y[i] = x[0] + x[1] + ... + x[i]
+// The other fundamental parallel primitive after map and reduce — the basis of
+// stream compaction, sorting, and cumulative statistics. Uses shared memory and
+// log(n) barrier-synchronized steps. (One block, n ≤ 256 in this demo.)
+
+kernel scan(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    var scratch: threadgroup array<f32, 256>;
+    let lx = ltid.x;
+
+    if (lx < n) { scratch[lx] = x[lx]; } else { scratch[lx] = 0.0; }
+    barrier();
+
+    var offset = 1;
+    while (offset < n) {
+        var add: f32 = 0.0;
+        if (lx >= offset) { add = scratch[lx - offset]; }   // read phase
+        barrier();
+        scratch[lx] = scratch[lx] + add;                    // write phase
+        barrier();
+        offset = offset * 2;
+    }
+
+    if (lx < n) { y[lx] = scratch[lx]; }
+}
