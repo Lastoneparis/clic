@@ -22,6 +22,7 @@ Worked through iteratively. Checked = done & pushed.
 - [ ] reduction: max variant
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [x] scaled dot-product attention — `examples/attention.clic` (transformer core)
+- [x] RMSNorm (LLaMA / Mistral normalization) — `examples/nn.clic`
 - [x] conv2d — `examples/conv2d.clic` (CNN core)
 - [x] INT8 GEMM (i8×i8 → i32 accumulate) — `examples/gemm_i8.clic` (the OSHI-A1 datapath)
 - [ ] more math (tanh already; add erf, rsqrt helpers)

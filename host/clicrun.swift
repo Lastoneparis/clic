@@ -397,6 +397,22 @@ if verify == "saxpy" {
         maxErr = max(maxErr, Double(abs(y[i] - ref)))
     }
     verifyMsg = (maxErr <= 1e-6 ? "PASS" : "FAIL") + String(format: " (max err %.1e, i8 quant)", maxErr)
+} else if verify == "rmsnorm" {
+    let R = Int(scalar("R")); let C = Int(scalar("C")); let eps = Float(scalar("eps"))
+    let x = hostF["x"]!; let y = bufF("y")
+    var maxRel = 0.0
+    for _ in 0..<16 {
+        let r = Int.random(in: 0..<R)
+        var ss: Float = 0
+        for j in 0..<C { let v = x[r*C+j]; ss += v * v }
+        let inv = 1 / (ss / Float(C) + eps).squareRoot()
+        for _ in 0..<8 {
+            let j = Int.random(in: 0..<C)
+            let ref = x[r*C+j] * inv
+            maxRel = max(maxRel, Double(abs(y[r*C+j] - ref) / max(abs(ref), 1e-3)))
+        }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, RMSNorm)", maxRel)
 } else if verify == "collatz" {
     let base = UInt32(truncatingIfNeeded: Int(scalar("base")))
     let n = Int(scalar("n"))

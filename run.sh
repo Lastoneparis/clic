@@ -29,7 +29,7 @@ echo "==> [2/3] building GPU host (clicrun.swift)"
 swiftc -O host/clicrun.swift -o build/clicrun
 
 echo "==> [3/3] running on the GPU"
-for r in saxpy gemm gemm_tiled gemm_i8 linear_relu linear linear_gelu reduce softmax layernorm attention conv2d scan vec4 clamp scale_half quant collatz sha256 raster; do
+for r in saxpy gemm gemm_tiled gemm_i8 linear_relu linear linear_gelu reduce softmax layernorm rmsnorm attention conv2d scan vec4 clamp scale_half quant collatz sha256 raster; do
     echo
     ./build/clicrun "runs/$r.json"
 done

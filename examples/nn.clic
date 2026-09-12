@@ -36,3 +36,20 @@ kernel layernorm_rows(R: i32, C: i32, eps: f32, x: buffer<f32>, y: buffer<f32>) 
         }
     }
 }
+
+// RMSNorm — the normalization used by LLaMA / Mistral: scale each row by the
+// inverse root-mean-square (no mean subtraction).  y = x / sqrt(mean(x^2) + eps)
+kernel rmsnorm_rows(R: i32, C: i32, eps: f32, x: buffer<f32>, y: buffer<f32>) {
+    let r = tid.x;
+    if (r < R) {
+        var ss = 0.0;
+        for (var j: i32 = 0; j < C; j = j + 1) {
+            let v = x[r * C + j];
+            ss = ss + v * v;
+        }
+        let inv = 1.0 / sqrt(ss / float(C) + eps);
+        for (var j: i32 = 0; j < C; j = j + 1) {
+            y[r * C + j] = x[r * C + j] * inv;
+        }
+    }
+}
