@@ -1,0 +1,14 @@
+{
+  "kernel": "softmax_rows",
+  "metal": "../build/nn.metal",
+  "grid": [1024, 1, 1],
+  "threadgroup": [128, 1, 1],
+  "iters": 50,
+  "verify": "softmax",
+  "bindings": [
+    { "name": "R", "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "C", "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "x", "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "y", "kind": "buffer", "type": "f32", "len": 1048576, "init": "zero" }
+  ]
+}

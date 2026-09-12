@@ -230,6 +230,47 @@ if verify == "saxpy" {
     for i in 0..<n { ref += Double(x[i]) }
     let rel = ref != 0 ? abs(gpu - ref) / abs(ref) : abs(gpu)
     verifyMsg = (rel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (sum rel err %.2e)", rel)
+} else if verify == "softmax" {
+    let R = Int(scalar("R")); let C = Int(scalar("C"))
+    let x = hostF["x"]!; let y = bufF("y")
+    var maxRel = 0.0, maxSumErr = 0.0
+    for _ in 0..<16 {
+        let r = Int.random(in: 0..<R)
+        var m = -Float.greatestFiniteMagnitude
+        for j in 0..<C { m = max(m, x[r * C + j]) }
+        var s: Float = 0
+        for j in 0..<C { s += exp(x[r * C + j] - m) }
+        var rowsum: Float = 0
+        for j in 0..<C { rowsum += y[r * C + j] }
+        maxSumErr = max(maxSumErr, Double(abs(rowsum - 1)))
+        for _ in 0..<8 {
+            let j = Int.random(in: 0..<C)
+            let ref = exp(x[r * C + j] - m) / s
+            if ref != 0 { maxRel = max(maxRel, Double(abs(y[r * C + j] - ref) / abs(ref))) }
+        }
+    }
+    verifyMsg = (maxRel <= 1e-3 && maxSumErr <= 1e-3 ? "PASS" : "FAIL")
+        + String(format: " (rel %.1e, row-sum err %.1e)", maxRel, maxSumErr)
+} else if verify == "layernorm" {
+    let R = Int(scalar("R")); let C = Int(scalar("C")); let eps = Float(scalar("eps"))
+    let x = hostF["x"]!; let y = bufF("y")
+    var maxRel = 0.0
+    for _ in 0..<16 {
+        let r = Int.random(in: 0..<R)
+        var mean: Float = 0
+        for j in 0..<C { mean += x[r * C + j] }
+        mean /= Float(C)
+        var v: Float = 0
+        for j in 0..<C { let d = x[r * C + j] - mean; v += d * d }
+        v /= Float(C)
+        let inv = 1 / (v + eps).squareRoot()
+        for _ in 0..<8 {
+            let j = Int.random(in: 0..<C)
+            let ref = (x[r * C + j] - mean) * inv
+            maxRel = max(maxRel, Double(abs(y[r * C + j] - ref) / max(abs(ref), 1e-3)))
+        }
+    }
+    verifyMsg = (maxRel <= 1e-2 ? "PASS" : "FAIL") + String(format: " (rel %.1e)", maxRel)
 } else if verify == "collatz" {
     let base = UInt32(truncatingIfNeeded: Int(scalar("base")))
     let n = Int(scalar("n"))

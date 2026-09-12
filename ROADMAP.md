@@ -17,7 +17,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] activations (relu, leaky_relu, sigmoid, gelu)
 - [x] reductions (parallel tree sum) — `examples/reduce.clic`
 - [ ] reduction: max + prefix sum (scan)
-- [ ] softmax, layernorm
+- [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [ ] more math (tanh already; add erf, rsqrt helpers)
 - [ ] crypto: sha256 as a callable module; keccak
 
