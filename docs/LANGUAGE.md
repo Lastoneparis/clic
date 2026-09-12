@@ -30,6 +30,7 @@ kernel apply(n: i32, k: f32, x: buffer<f32>) {
 | Type | Meaning |
 |------|---------|
 | `i32`, `u32` | 32-bit signed / unsigned integer |
+| `i8`, `u8` | 8-bit signed / unsigned integer — quantized inference |
 | `f32` | 32-bit float |
 | `f16` | 16-bit float (half) — for quantized/AI compute |
 | `bool` | boolean |

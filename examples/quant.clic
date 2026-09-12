@@ -1,0 +1,12 @@
+// quant.clic — INT8 quantize/dequantize, the core of quantized inference.
+// Demonstrates the i8 (char) type: round x to an 8-bit integer, then back.
+// (i8/u8 as compute types; f32 buffers for I/O until the runtime handles
+// 1-byte buffers.)
+
+kernel quant_i8(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        var q: i8 = char(round(x[i] * 127.0));   // quantize to INT8
+        y[i] = float(q) / 127.0;                  // dequantize
+    }
+}

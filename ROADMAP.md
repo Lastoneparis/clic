@@ -11,7 +11,7 @@ Worked through iteratively. Checked = done & pushed.
 - [ ] `const` global constants
 - [x] `f16` (half) type — verified on GPU (`examples/lang9.clic`)
 - [x] ternary `cond ? a : b` — verified on GPU
-- [ ] `i8`/`u8` types — quantized AI
+- [x] `i8`/`u8` types — quantized AI — verified on GPU (`examples/quant.clic`)
 - [ ] vector types (`f32x4`) + swizzles
 
 ## Standard library

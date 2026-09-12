@@ -295,6 +295,15 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(y[i] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, f16 compute)", maxRel)
+} else if verify == "quant_i8" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    var maxErr = 0.0
+    for i in stride(from: 0, to: n, by: max(1, n / 4096)) {
+        let q = Int8((x[i] * 127.0).rounded())     // reference INT8 quantization
+        let ref = Float(q) / 127.0
+        maxErr = max(maxErr, Double(abs(y[i] - ref)))
+    }
+    verifyMsg = (maxErr <= 1e-6 ? "PASS" : "FAIL") + String(format: " (max err %.1e, i8 quant)", maxErr)
 } else if verify == "collatz" {
     let base = UInt32(truncatingIfNeeded: Int(scalar("base")))
     let n = Int(scalar("n"))

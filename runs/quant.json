@@ -1,0 +1,13 @@
+{
+  "kernel": "quant_i8",
+  "metal": "../build/quant.metal",
+  "grid": [1048576, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 50,
+  "verify": "quant_i8",
+  "bindings": [
+    { "name": "n", "kind": "scalar", "type": "i32", "value": 1048576 },
+    { "name": "x", "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "y", "kind": "buffer", "type": "f32", "len": 1048576, "init": "zero" }
+  ]
+}
