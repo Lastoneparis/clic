@@ -154,8 +154,10 @@ Contributions and ideas welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 The bigger vision — a European fabless AI-inference accelerator built on this
 open stack — is in [PITCH.md](PITCH.md) and [docs/FUNDRAISING.md](docs/FUNDRAISING.md).
 
-**Toward silicon — `clic-A1`:** the accelerator this stack compiles to, with a
-de-risked path from FPGA to an FD-SOI MPW tape-out:
+**Toward silicon — `OSHI-A1`:** the accelerator this stack compiles to (131 TOPS
+INT8 / 262 TOPS INT4, 273 GB/s, ~52 W, ~125 mm² @12 nm — see the
+[silicon spec](docs/hardware/SILICON-SPEC.md)), with a de-risked path from FPGA
+to an FD-SOI MPW tape-out:
 [architecture](docs/hardware/ARCHITECTURE.md) ·
 [ISA](docs/hardware/ISA.md) ·
 [MVP silicon](docs/hardware/MVP-SILICON.md) ·
