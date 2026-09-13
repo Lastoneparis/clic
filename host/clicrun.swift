@@ -467,6 +467,23 @@ if verify == "saxpy" {
         }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, attention)", maxRel)
+} else if verify == "rope" {
+    let S = Int(scalar("S")); let D = Int(scalar("D")); let base = Float(scalar("base"))
+    let X = hostF["X"]!; let O = bufF("O")
+    var maxRel = 0.0
+    for _ in 0..<8 {
+        let t = Int.random(in: 0..<S)
+        for i in 0..<(D/2) {
+            let freq = powf(base, -(Float(2*i) / Float(D)))
+            let ang = Float(t) * freq
+            let a = X[t*D + 2*i]; let b = X[t*D + 2*i + 1]
+            let r0 = a * cosf(ang) - b * sinf(ang)
+            let r1 = a * sinf(ang) + b * cosf(ang)
+            if abs(r0) > 1e-4 { maxRel = max(maxRel, Double(abs(O[t*D+2*i]   - r0) / abs(r0))) }
+            if abs(r1) > 1e-4 { maxRel = max(maxRel, Double(abs(O[t*D+2*i+1] - r1) / abs(r1))) }
+        }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, RoPE)", maxRel)
 } else if verify == "flash_attn" {
     // flash attention must match plain softmax-attention exactly (it is the
     // same math, reorganised into one streaming pass)

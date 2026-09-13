@@ -1,0 +1,27 @@
+// rope.clic — RoPE (rotary positional embedding), as used by LLaMA / Mistral.
+//
+// RoPE injects position into attention by ROTATING pairs of feature dimensions
+// by a position-dependent angle, so that a query at position p and a key at
+// position q interact through their relative offset (p - q). This is the
+// classic interleaved-pair form (Su et al. 2021): dims (2i, 2i+1) rotate by
+// angle = p * base^(-2i/D). One thread per token row; position = row index.
+// Exercises the sin/cos/pow math builtins.
+//
+// base = the RoPE frequency base (10000 in LLaMA/Mistral)
+
+kernel rope(S: i32, D: i32, base: f32, X: buffer<f32>, O: buffer<f32>) {
+    let t = tid.x;                          // token index == its position
+    if (t < S) {
+        let hd = D / 2;
+        for (var i: i32 = 0; i < hd; i = i + 1) {
+            let freq = pow(base, -(float(2 * i) / float(D)));
+            let angle = float(t) * freq;
+            let c = cos(angle);
+            let s = sin(angle);
+            let a = X[t * D + 2 * i];
+            let b = X[t * D + 2 * i + 1];
+            O[t * D + 2 * i]     = a * c - b * s;
+            O[t * D + 2 * i + 1] = a * s + b * c;
+        }
+    }
+}
