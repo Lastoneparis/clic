@@ -1,0 +1,15 @@
+// consts.clic — file-scope `const` global constants.
+// Declared once at the top of the file, usable from any fn or kernel, emitted
+// into Metal's `constant` address space. Here we normalise an angle by TAU and
+// scale by a gain, proving both a float and an int const reach the kernel.
+
+const TAU: f32 = 6.2831853;
+const GAIN: i32 = 3;
+
+kernel consts(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        let phase = x[i] / TAU;          // float const in an expression
+        y[i] = sin(phase) * float(GAIN); // int const, cast to float
+    }
+}

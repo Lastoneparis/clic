@@ -8,7 +8,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] threadgroup memory, `barrier()`, `ltid`/`bid`
 - [x] `while` loops, `break`, `continue`
 - [x] compound assignment (`+= -= *= /= %= &= |= ^= <<= >>=`)
-- [ ] `const` global constants
+- [x] `const` global constants — file-scope, `constant` address space — verified on GPU (`examples/consts.clic`)
 - [x] `f16` (half) type — verified on GPU (`examples/lang9.clic`)
 - [x] ternary `cond ? a : b` — verified on GPU
 - [x] `i8`/`u8` types — quantized AI — verified on GPU (`examples/quant.clic`)

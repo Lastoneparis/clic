@@ -232,6 +232,15 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "consts" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    let TAU: Float = 6.2831853; let GAIN: Float = 3
+    var maxRel = 0.0
+    for i in 0..<n {
+        let ref = sin(x[i] / TAU) * GAIN
+        if abs(ref) > 1e-4 { maxRel = max(maxRel, Double(abs(y[i] - ref) / abs(ref))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, const globals)", maxRel)
 } else if verify == "mathfns" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var maxRel = 0.0

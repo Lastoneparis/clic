@@ -22,6 +22,8 @@ kernel apply(n: i32, k: f32, x: buffer<f32>) {
 
 - `include "path"` — textually includes another `.clic` file (path is relative
   to the including file). Safe against cycles.
+- `const NAME: T = expr;` — a file-scope compile-time constant, usable from any
+  `fn` or `kernel`; emitted into Metal's `constant` address space.
 - `fn name(params) -> type { ... }` — a device function; returns with `return`.
 - `kernel name(params) { ... }` — a GPU entry point (no return value).
 

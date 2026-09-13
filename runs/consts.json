@@ -1,0 +1,13 @@
+{
+  "kernel": "consts",
+  "metal": "../build/consts.metal",
+  "grid": [4096, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 100,
+  "verify": "consts",
+  "bindings": [
+    { "name": "n", "kind": "scalar", "type": "i32", "value": 4096 },
+    { "name": "x", "kind": "buffer", "type": "f32", "len": 4096, "init": "wide" },
+    { "name": "y", "kind": "buffer", "type": "f32", "len": 4096, "init": "zero" }
+  ]
+}

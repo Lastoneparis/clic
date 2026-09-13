@@ -22,7 +22,7 @@ import argparse
 # --------------------------------------------------------------------------
 # Lexer
 # --------------------------------------------------------------------------
-KEYWORDS = {'kernel', 'fn', 'let', 'var', 'if', 'else', 'for', 'while',
+KEYWORDS = {'kernel', 'fn', 'let', 'var', 'const', 'if', 'else', 'for', 'while',
             'break', 'continue', 'array', 'threadgroup',
             'buffer', 'return', 'i32', 'f32', 'f16', 'u32', 'i8', 'u8', 'f32x4',
             'bool', 'true', 'false'}
@@ -116,11 +116,23 @@ class Parser:
     def parse_program(self):
         decls = []
         while not self.at('EOF'):
-            if self.at('fn'):
+            if self.at('const'):
+                decls.append(self.parse_const())
+            elif self.at('fn'):
                 decls.append(self.parse_fn())
             else:
                 decls.append(self.parse_kernel())
         return decls
+
+    def parse_const(self):
+        self.eat('const')
+        name = self.eat('ID').val
+        self.eat(':')
+        ty = self.parse_type()
+        self.eat('=')
+        e = self.parse_expr()
+        self.eat(';')
+        return ('const', name, ty, e)
 
     def parse_fn(self):
         self.eat('fn')
@@ -513,10 +525,16 @@ _HEADER = '#include <metal_stdlib>\nusing namespace metal;\n'
 def compile_src(src):
     global _USER_FNS
     decls = Parser(lex(src)).parse_program()
+    consts = [d for d in decls if d[0] == 'const']
     fns = [d for d in decls if d[0] == 'fn']
     kernels = [d for d in decls if d[0] == 'kernel']
     _USER_FNS = set(f[1] for f in fns)
     parts = [_HEADER]
+    if consts:
+        # file-scope compile-time constants in Metal's `constant` address space
+        parts.append('\n'.join(
+            'constant %s %s = %s;' % (_cscalar(ty), name, gen_expr(e))
+            for _, name, ty, e in consts))
     if fns:
         parts.append('\n'.join(gen_fn_proto(f) for f in fns))      # forward decls
         parts.append('\n\n'.join(gen_fn(f) for f in fns))
