@@ -1,0 +1,20 @@
+// u64mix.clic — exercises the u64 (64-bit unsigned) type and hex literals.
+//
+// Metal host buffers here are 32-bit, so we compute a genuine 64-bit value per
+// thread (a multiply that overflows 32 bits, a 64-bit add of a hex constant,
+// and a 64-bit shift/xor) and write its low and high 32-bit halves to a u32
+// buffer. The host re-runs the same math in UInt64 and checks both halves.
+// This is the SplitMix64-style mixing that keccak/xoshiro need.
+
+const MIX: u64 = 0x9E3779B97F4A7C15;      // 64-bit golden ratio (hex + UL)
+
+kernel u64mix(n: i32, out: buffer<u32>) {
+    let i = tid.x;
+    if (i < n) {
+        var v: u64 = ulong(uint(i)) * 2654435761;   // overflows 32 bits
+        v = v + MIX;                                 // 64-bit add
+        v = v ^ (v >> 29);                           // 64-bit shift + xor
+        out[i * 2 + 0] = uint(v);                    // low  32 bits
+        out[i * 2 + 1] = uint(v >> 32);              // high 32 bits
+    }
+}

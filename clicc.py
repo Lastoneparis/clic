@@ -24,15 +24,15 @@ import argparse
 # --------------------------------------------------------------------------
 KEYWORDS = {'kernel', 'fn', 'let', 'var', 'const', 'if', 'else', 'for', 'while',
             'break', 'continue', 'array', 'threadgroup',
-            'buffer', 'return', 'i32', 'f32', 'f16', 'u32', 'i8', 'u8', 'f32x4',
-            'bool', 'true', 'false'}
+            'buffer', 'return', 'i32', 'f32', 'f16', 'u32', 'u64', 'i8', 'u8',
+            'f32x4', 'bool', 'true', 'false'}
 
 # Order matters: comments/whitespace before operators, floats before ints.
 TOKEN_SPEC = [
     ('COMMENT', r'//[^\n]*'),
     ('WS',      r'[ \t\r\n]+'),
     ('FLOAT',   r'\d+\.\d+([eE][+-]?\d+)?|\d+[eE][+-]?\d+'),
-    ('INT',     r'\d+'),
+    ('INT',     r'0[xX][0-9a-fA-F]+|\d+'),
     ('ID',      r'[A-Za-z_][A-Za-z0-9_]*'),
     ('OP',      r'<<=|>>=|<<|>>|->|<=|>=|==|!=|&&|\|\||\+=|-=|\*=|/=|%=|&=|\^=|\|=|[-+*/%<>=!.,;:?()\[\]{}&|^~]'),
 ]
@@ -188,10 +188,10 @@ class Parser:
             self.eat('<')
             elem = self.parse_type()
             self.eat(',')
-            size = int(self.eat('INT').val)
+            size = int(self.eat('INT').val, 0)
             self.eat('>')
             return ('array', elem, size, 'thread')
-        if t.kind in ('i32', 'f32', 'f16', 'u32', 'i8', 'u8', 'f32x4', 'bool'):
+        if t.kind in ('i32', 'f32', 'f16', 'u32', 'u64', 'i8', 'u8', 'f32x4', 'bool'):
             self.next()
             return ('scalar', t.kind)
         self.err('expected a type (i32/f32/u32/bool/buffer<..>/array<T,N>)')
@@ -345,7 +345,9 @@ class Parser:
         t = self.peek()
         if t.kind == 'INT':
             self.next()
-            return ('int', int(t.val))
+            raw = t.val
+            val = int(raw, 16) if raw[:2] in ('0x', '0X') else int(raw, 10)
+            return ('int', val, raw)          # keep raw text (hex form) for codegen
         if t.kind == 'FLOAT':
             self.next()
             return ('float', float(t.val))
@@ -366,10 +368,11 @@ class Parser:
 # --------------------------------------------------------------------------
 # Code generation:  clic AST -> Metal Shading Language
 # --------------------------------------------------------------------------
-_TYMAP = {'i32': 'int', 'u32': 'uint', 'f32': 'float', 'f16': 'half',
-          'i8': 'char', 'u8': 'uchar', 'f32x4': 'float4', 'bool': 'bool'}
+_TYMAP = {'i32': 'int', 'u32': 'uint', 'u64': 'ulong', 'f32': 'float',
+          'f16': 'half', 'i8': 'char', 'u8': 'uchar', 'f32x4': 'float4',
+          'bool': 'bool'}
 # builtin functions passed straight through to MSL
-_BUILTINS = {'float', 'int', 'uint', 'half', 'char', 'uchar', 'float4', 'dot',
+_BUILTINS = {'float', 'int', 'uint', 'ulong', 'half', 'char', 'uchar', 'float4', 'dot',
              'min', 'max', 'abs', 'sqrt', 'exp', 'log', 'pow', 'fma', 'floor',
              'ceil', 'tanh', 'clamp', 'round',
              # math stdlib (all genuine Metal functions)
@@ -388,7 +391,10 @@ def _cscalar(ty):
 def gen_expr(e):
     t = e[0]
     if t == 'int':
-        return str(e[1])
+        raw = e[2] if len(e) > 2 else str(e[1])
+        # values beyond 32-bit unsigned need an explicit 64-bit suffix in MSL,
+        # or the literal silently truncates
+        return raw + ('UL' if e[1] > 0xFFFFFFFF else '')
     if t == 'float':
         return repr(e[1]) + 'f'          # 2.0 -> 2.0f
     if t == 'bool':

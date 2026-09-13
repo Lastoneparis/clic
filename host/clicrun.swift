@@ -232,6 +232,18 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "u64mix" {
+    let n = Int(scalar("n")); let out = bufU("out")
+    var bad = 0
+    for i in 0..<n {
+        var v = UInt64(UInt32(i)) &* 2654435761
+        v = v &+ 0x9E3779B97F4A7C15
+        v = v ^ (v >> 29)
+        let lo = UInt32(truncatingIfNeeded: v)
+        let hi = UInt32(truncatingIfNeeded: v >> 32)
+        if out[i * 2 + 0] != lo || out[i * 2 + 1] != hi { bad += 1 }
+    }
+    verifyMsg = (bad == 0 ? "PASS" : "FAIL") + " (\(n - bad)/\(n) u64 values match, 64-bit arithmetic)"
 } else if verify == "consts" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     let TAU: Float = 6.2831853; let GAIN: Float = 3

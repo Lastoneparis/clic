@@ -32,7 +32,8 @@ Worked through iteratively. Checked = done & pushed.
 - [x] batched matmul (`bmm`, `tid.z` selects batch) — `examples/bmm.clic` (multi-head attention primitive)
 - [x] math stdlib: `rsqrt sin cos tan atan2 exp2 log2 fract sign trunc` — verified on GPU (`examples/mathfns.clic`)
 - [x] crypto: sha256 as a callable module (`lib/sha256.clic`, 6 device fns) — `examples/sha256.clic` includes it, 1001/1001 vs CryptoKit
-- [ ] crypto: keccak / SHA3-256 — needs a `u64` type first (64-bit lanes)
+- [x] `u64` type (`ulong`) + hex literals + 64-bit-safe literal suffixing — verified on GPU (`examples/u64mix.clic`)
+- [ ] crypto: keccak / SHA3-256 — now unblocked by `u64`
 
 ## Manual & docs
 - [x] LANGUAGE.md reference

@@ -1,0 +1,12 @@
+{
+  "kernel": "u64mix",
+  "metal": "../build/u64mix.metal",
+  "grid": [4096, 1, 1],
+  "threadgroup": [256, 1, 1],
+  "iters": 100,
+  "verify": "u64mix",
+  "bindings": [
+    { "name": "n",   "kind": "scalar", "type": "i32", "value": 4096 },
+    { "name": "out", "kind": "buffer", "type": "u32", "len": 8192, "init": "zero" }
+  ]
+}
