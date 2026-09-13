@@ -1,0 +1,17 @@
+// bmm.clic — batched matrix multiply:  C[b] = A[b] · B[b]  for each batch b.
+// The primitive behind multi-head attention and batched inference. One thread
+// per output element; tid.z selects the batch. Layouts are [batch][row][col].
+
+kernel bmm(Bt: i32, M: i32, N: i32, K: i32,
+           A: buffer<f32>, B: buffer<f32>, C: buffer<f32>) {
+    let col = tid.x;
+    let row = tid.y;
+    let bt = tid.z;
+    if (row < M && col < N && bt < Bt) {
+        var acc: f32 = 0.0;
+        for (var k: i32 = 0; k < K; k = k + 1) {
+            acc = acc + A[(bt * M + row) * K + k] * B[(bt * K + k) * N + col];
+        }
+        C[(bt * M + row) * N + col] = acc;
+    }
+}

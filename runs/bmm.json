@@ -1,0 +1,17 @@
+{
+  "kernel": "bmm",
+  "metal": "../build/bmm.metal",
+  "grid": [32, 32, 8],
+  "threadgroup": [8, 8, 4],
+  "iters": 50,
+  "verify": "bmm",
+  "bindings": [
+    { "name": "Bt", "kind": "scalar", "type": "i32", "value": 8 },
+    { "name": "M",  "kind": "scalar", "type": "i32", "value": 32 },
+    { "name": "N",  "kind": "scalar", "type": "i32", "value": 32 },
+    { "name": "K",  "kind": "scalar", "type": "i32", "value": 32 },
+    { "name": "A",  "kind": "buffer", "type": "f32", "len": 8192, "init": "random" },
+    { "name": "B",  "kind": "buffer", "type": "f32", "len": 8192, "init": "random" },
+    { "name": "C",  "kind": "buffer", "type": "f32", "len": 8192, "init": "zero" }
+  ]
+}

@@ -232,6 +232,17 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "bmm" {
+    let Bt = Int(scalar("Bt")); let M = Int(scalar("M")); let N = Int(scalar("N")); let K = Int(scalar("K"))
+    let A = hostF["A"]!; let B = hostF["B"]!; let C = bufF("C")
+    var maxRel = 0.0
+    for _ in 0..<24 {
+        let bt = Int.random(in: 0..<Bt), r = Int.random(in: 0..<M), c = Int.random(in: 0..<N)
+        var acc: Float = 0
+        for k in 0..<K { acc += A[(bt*M+r)*K+k] * B[(bt*K+k)*N+c] }
+        if abs(acc) > 1e-4 { maxRel = max(maxRel, Double(abs(C[(bt*M+r)*N+c] - acc) / abs(acc))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, batched matmul)", maxRel)
 } else if verify == "linear_gelu" {
     let M = Int(scalar("M")); let N = Int(scalar("N")); let K = Int(scalar("K"))
     let A = hostF["A"]!; let B = hostF["B"]!; let bias = hostF["bias"]!; let C = bufF("C")

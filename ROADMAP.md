@@ -29,6 +29,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] multi-channel conv2d (Cin→Cout, uses `tid.z`) — `examples/conv2d_mc.clic`
 - [x] maxpool2d (CNN pooling) — `examples/maxpool.clic`
 - [x] INT8 GEMM (i8×i8 → i32 accumulate) — `examples/gemm_i8.clic` (the OSHI-A1 datapath)
+- [x] batched matmul (`bmm`, `tid.z` selects batch) — `examples/bmm.clic` (multi-head attention primitive)
 - [ ] more math (tanh already; add erf, rsqrt helpers)
 - [ ] crypto: sha256 as a callable module; keccak
 
