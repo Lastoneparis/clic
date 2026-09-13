@@ -1,0 +1,11 @@
+// transpose.clic — matrix transpose:  Out[c,r] = In[r,c].
+// A staple utility (attention needs Kᵀ, backprop needs Wᵀ). In is M×N,
+// Out is N×M. One thread per element.
+
+kernel transpose(M: i32, N: i32, In: buffer<f32>, Out: buffer<f32>) {
+    let c = tid.x;
+    let r = tid.y;
+    if (r < M && c < N) {
+        Out[c * M + r] = In[r * N + c];
+    }
+}

@@ -367,6 +367,15 @@ if verify == "saxpy" {
         checks += 1; if Int(out[r]) != bi { errs += 1 }
     }
     verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) argmax indices exact)"
+} else if verify == "transpose" {
+    let M = Int(scalar("M")); let N = Int(scalar("N"))
+    let In = hostF["In"]!; let Out = bufF("Out")
+    var errs = 0, checks = 0
+    for _ in 0..<64 {
+        let r = Int.random(in: 0..<M), c = Int.random(in: 0..<N)
+        checks += 1; if Out[c*M+r] != In[r*N+c] { errs += 1 }
+    }
+    verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) transpose elems exact)"
 } else if verify == "maxpool2d" {
     let H = Int(scalar("H")); let W = Int(scalar("W")); let P = Int(scalar("P"))
     let OW = W / P, OH = H / P

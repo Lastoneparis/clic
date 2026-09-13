@@ -1,0 +1,14 @@
+{
+  "kernel": "transpose",
+  "metal": "../build/transpose.metal",
+  "grid": [1024, 1024, 1],
+  "threadgroup": [16, 16, 1],
+  "iters": 50,
+  "verify": "transpose",
+  "bindings": [
+    { "name": "M",   "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "N",   "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "In",  "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "Out", "kind": "buffer", "type": "f32", "len": 1048576, "init": "zero" }
+  ]
+}
