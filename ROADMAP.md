@@ -19,6 +19,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] linear_gelu (transformer FFN: dense + bias + GELU) — `examples/linear_gelu.clic`
 - [x] reductions (parallel tree sum) — `examples/reduce.clic`
 - [x] prefix sum / inclusive scan (Hillis-Steele) — `examples/scan.clic`
+- [x] argmax (greedy decode / token selection) — `examples/argmax.clic`
 - [ ] reduction: max variant
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [x] scaled dot-product attention — `examples/attention.clic` (transformer core)

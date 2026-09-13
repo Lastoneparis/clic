@@ -1,0 +1,14 @@
+{
+  "kernel": "argmax",
+  "metal": "../build/argmax.metal",
+  "grid": [1024, 1, 1],
+  "threadgroup": [128, 1, 1],
+  "iters": 50,
+  "verify": "argmax",
+  "bindings": [
+    { "name": "R",   "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "C",   "kind": "scalar", "type": "i32", "value": 1024 },
+    { "name": "x",   "kind": "buffer", "type": "f32", "len": 1048576, "init": "random" },
+    { "name": "out", "kind": "buffer", "type": "u32", "len": 1024,    "init": "zero" }
+  ]
+}

@@ -1,0 +1,17 @@
+// argmax.clic — per-row argmax: the index of the largest value in each row.
+// The token-selection (greedy decode) step of LLM inference: after the final
+// layer produces logits, argmax picks the next token. One thread per row;
+// outputs a u32 index.
+
+kernel argmax(R: i32, C: i32, x: buffer<f32>, out: buffer<u32>) {
+    let r = tid.x;
+    if (r < R) {
+        var best = x[r * C];
+        var bi: i32 = 0;
+        for (var j: i32 = 1; j < C; j = j + 1) {
+            let v = x[r * C + j];
+            if (v > best) { best = v; bi = j; }
+        }
+        out[r] = uint(bi);
+    }
+}

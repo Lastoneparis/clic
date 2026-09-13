@@ -356,6 +356,17 @@ if verify == "saxpy" {
         if abs(ref) > 1e-4 { maxRel = max(maxRel, Double(abs(y[i] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, f32x4)", maxRel)
+} else if verify == "argmax" {
+    let R = Int(scalar("R")); let C = Int(scalar("C"))
+    let x = hostF["x"]!; let out = bufU("out")
+    var errs = 0, checks = 0
+    for _ in 0..<64 {
+        let r = Int.random(in: 0..<R)
+        var best = x[r*C]; var bi = 0
+        for j in 1..<C { if x[r*C+j] > best { best = x[r*C+j]; bi = j } }
+        checks += 1; if Int(out[r]) != bi { errs += 1 }
+    }
+    verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) argmax indices exact)"
 } else if verify == "scan" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var acc: Float = 0; var maxRel = 0.0
