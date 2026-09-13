@@ -1,10 +1,8 @@
 // sha3_256.clic — a full SHA3-256 hasher for a single-block message (<=135 B).
 //
 // Pipeline: absorb the 17-lane (1088-bit) rate block, apply the pad10*1 rule
-// with SHA-3's 0x06 domain byte, run Keccak-f[1600], then squeeze the first
-// 256 bits (4 lanes / 32 bytes) as the digest. The permutation body is the
-// same one verified in examples/keccak.clic (inlined here until clic can pass
-// a thread array to a fn by reference — tracked in ROADMAP).
+// with SHA-3's 0x06 domain byte, run Keccak-f[1600] (from lib/keccak.clic),
+// then squeeze the first 256 bits (4 lanes / 32 bytes) as the digest.
 //
 // The host runs the empty message and checks the digest against the canonical
 // vector  SHA3-256("") = a7ffc6f8...80f8434a.
@@ -13,18 +11,10 @@
 // msg    = up to 17 lanes (34 u32 halves), little-endian
 // out    = 8 u32 (the 32-byte digest, little-endian per word)
 
-fn rotl64(x: u64, n: i32) -> u64 {
-    return (n == 0) ? x : ((x << n) | (x >> (64 - n)));
-}
+include "../lib/keccak.clic"
 
 kernel sha3_256(msglen: i32, msg: buffer<u32>, out: buffer<u32>) {
     var A: array<u64, 25>;
-    var B: array<u64, 25>;
-    var C: array<u64, 5>;
-    var D: array<u64, 5>;
-    var RC: array<u64, 24>;
-    var rho: array<i32, 25>;
-
     for (var i: i32 = 0; i < 25; i = i + 1) { A[i] = ulong(0); }
 
     // absorb one rate block (17 lanes) from the message
@@ -36,49 +26,7 @@ kernel sha3_256(msglen: i32, msg: buffer<u32>, out: buffer<u32>) {
     A[L / 8] = A[L / 8] ^ (ulong(6) << (8 * (L % 8)));
     A[16] = A[16] ^ (ulong(0x80) << 56);
 
-    rho[0] = 0;  rho[1] = 1;  rho[2] = 62; rho[3] = 28; rho[4] = 27;
-    rho[5] = 36; rho[6] = 44; rho[7] = 6;  rho[8] = 55; rho[9] = 20;
-    rho[10] = 3; rho[11] = 10; rho[12] = 43; rho[13] = 25; rho[14] = 39;
-    rho[15] = 41; rho[16] = 45; rho[17] = 15; rho[18] = 21; rho[19] = 8;
-    rho[20] = 18; rho[21] = 2;  rho[22] = 61; rho[23] = 56; rho[24] = 14;
-
-    RC[0] = 0x1;                RC[1] = 0x8082;
-    RC[2] = 0x800000000000808A; RC[3] = 0x8000000080008000;
-    RC[4] = 0x808B;             RC[5] = 0x80000001;
-    RC[6] = 0x8000000080008081; RC[7] = 0x8000000000008009;
-    RC[8] = 0x8A;               RC[9] = 0x88;
-    RC[10] = 0x80008009;        RC[11] = 0x8000000A;
-    RC[12] = 0x8000808B;        RC[13] = 0x800000000000008B;
-    RC[14] = 0x8000000000008089; RC[15] = 0x8000000000008003;
-    RC[16] = 0x8000000000008002; RC[17] = 0x8000000000000080;
-    RC[18] = 0x800A;            RC[19] = 0x800000008000000A;
-    RC[20] = 0x8000000080008081; RC[21] = 0x8000000000008080;
-    RC[22] = 0x80000001;        RC[23] = 0x8000000080008008;
-
-    for (var r: i32 = 0; r < 24; r = r + 1) {
-        for (var x: i32 = 0; x < 5; x = x + 1) {
-            C[x] = A[x] ^ A[x + 5] ^ A[x + 10] ^ A[x + 15] ^ A[x + 20];
-        }
-        for (var x: i32 = 0; x < 5; x = x + 1) {
-            D[x] = C[(x + 4) % 5] ^ rotl64(C[(x + 1) % 5], 1);
-        }
-        for (var x: i32 = 0; x < 5; x = x + 1) {
-            for (var y: i32 = 0; y < 5; y = y + 1) {
-                A[x + 5 * y] = A[x + 5 * y] ^ D[x];
-            }
-        }
-        for (var x: i32 = 0; x < 5; x = x + 1) {
-            for (var y: i32 = 0; y < 5; y = y + 1) {
-                B[y + 5 * ((2 * x + 3 * y) % 5)] = rotl64(A[x + 5 * y], rho[x + 5 * y]);
-            }
-        }
-        for (var x: i32 = 0; x < 5; x = x + 1) {
-            for (var y: i32 = 0; y < 5; y = y + 1) {
-                A[x + 5 * y] = B[x + 5 * y] ^ ((~B[(x + 1) % 5 + 5 * y]) & B[(x + 2) % 5 + 5 * y]);
-            }
-        }
-        A[0] = A[0] ^ RC[r];
-    }
+    keccakf(A);          // the 24-round permutation, from the module
 
     // squeeze the 256-bit digest (first 4 lanes)
     for (var i: i32 = 0; i < 4; i = i + 1) {

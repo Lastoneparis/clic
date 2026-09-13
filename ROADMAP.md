@@ -35,7 +35,8 @@ Worked through iteratively. Checked = done & pushed.
 - [x] `u64` type (`ulong`) + hex literals + 64-bit-safe literal suffixing — verified on GPU (`examples/u64mix.clic`)
 - [x] crypto: Keccak-f[1600] permutation (SHA-3 / keccak256 core) — `examples/keccak.clic`, verified on GPU vs CPU reference + published zero-state KAT (lane0 = 0xF1258F7940E1DDE7)
 - [x] crypto: full SHA3-256 hasher (absorb + pad10*1/0x06 + squeeze) — `examples/sha3_256.clic`, matches canonical `SHA3-256("")` vector on GPU
-- [ ] extract Keccak-f into a callable module (needs `fn` params that take a thread array by reference)
+- [x] `fn` params that take a thread array by reference (`array<T,N>` → `thread T (&)[N]`) + void-return `fn`s — verified on GPU
+- [x] extract Keccak-f into a callable module (`lib/keccak.clic`) — both keccak & sha3_256 include it, KATs still pass
 
 ## Manual & docs
 - [x] LANGUAGE.md reference

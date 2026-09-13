@@ -145,8 +145,10 @@ class Parser:
                 self.next()
                 params.append(self.parse_param())
         self.eat(')')
-        self.eat('->')
-        ret = self.parse_type()
+        ret = ('scalar', 'void')           # default: no return value
+        if self.at('->'):
+            self.next()
+            ret = self.parse_type()
         body = self.parse_block()
         return ('fn', name, params, ret, body)
 
@@ -370,7 +372,7 @@ class Parser:
 # --------------------------------------------------------------------------
 _TYMAP = {'i32': 'int', 'u32': 'uint', 'u64': 'ulong', 'f32': 'float',
           'f16': 'half', 'i8': 'char', 'u8': 'uchar', 'f32x4': 'float4',
-          'bool': 'bool'}
+          'bool': 'bool', 'void': 'void'}
 # builtin functions passed straight through to MSL
 _BUILTINS = {'float', 'int', 'uint', 'ulong', 'half', 'char', 'uchar', 'float4', 'dot',
              'min', 'max', 'abs', 'sqrt', 'exp', 'log', 'pow', 'fma', 'floor',
@@ -504,23 +506,28 @@ def gen_kernel(k):
                                               gen_block(body, 1))
 
 
-def _fn_ptype(ty):
+def _fn_param(pn, ty):
+    """Render one fn parameter as a full 'type name' fragment."""
     if ty[0] == 'scalar':
-        return _TYMAP[ty[1]]
+        return '%s %s' % (_TYMAP[ty[1]], pn)
     if ty[0] == 'buffer':
-        return 'device %s*' % _TYMAP[ty[1][1]]
+        return 'device %s* %s' % (_TYMAP[ty[1][1]], pn)
+    if ty[0] == 'array':
+        # pass a thread/threadgroup array by reference so mutations propagate
+        space = 'threadgroup' if (len(ty) > 3 and ty[3] == 'threadgroup') else 'thread'
+        return '%s %s (&%s)[%d]' % (space, _TYMAP[ty[1][1]], pn, ty[2])
     raise SyntaxError('clic: unsupported fn parameter type %r' % (ty,))
 
 
 def gen_fn_proto(f):
     _, name, params, ret, _body = f
-    ps = ['%s %s' % (_fn_ptype(ty), pn) for pn, ty in params]
+    ps = [_fn_param(pn, ty) for pn, ty in params]
     return '%s %s(%s);' % (_TYMAP[ret[1]], name, ', '.join(ps))
 
 
 def gen_fn(f):
     _, name, params, ret, body = f
-    ps = ['%s %s' % (_fn_ptype(ty), pn) for pn, ty in params]
+    ps = [_fn_param(pn, ty) for pn, ty in params]
     return '%s %s(%s) {\n%s\n}' % (_TYMAP[ret[1]], name, ', '.join(ps),
                                    gen_block(body, 1))
 

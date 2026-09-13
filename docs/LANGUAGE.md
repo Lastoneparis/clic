@@ -25,6 +25,9 @@ kernel apply(n: i32, k: f32, x: buffer<f32>) {
 - `const NAME: T = expr;` — a file-scope compile-time constant, usable from any
   `fn` or `kernel`; emitted into Metal's `constant` address space.
 - `fn name(params) -> type { ... }` — a device function; returns with `return`.
+  The `-> type` is optional (omit it for a void function). A parameter typed
+  `array<T, N>` is passed **by reference**, so the callee mutates the caller's
+  array in place (e.g. `fn keccakf(A: array<u64, 25>) { ... }`).
 - `kernel name(params) { ... }` — a GPU entry point (no return value).
 
 ## Types
@@ -89,8 +92,9 @@ Indexing `a[i]`, member `v.x`, calls `f(a, b)`.
 
 `lib/activations.clic` provides `relu`, `leaky_relu`, `sigmoid`, `gelu`, `silu`.
 `lib/sha256.clic` provides the SHA-256 round functions (`sha_ssig0/1`,
-`sha_bsig0/1`, `sha_ch`, `sha_maj`) for building a hasher. Pull either in
-with `include`.
+`sha_bsig0/1`, `sha_ch`, `sha_maj`) for building a hasher.
+`lib/keccak.clic` provides `keccakf(A: array<u64, 25>)` — the Keccak-f[1600]
+permutation behind SHA-3/keccak256. Pull any of them in with `include`.
 
 ## Complete examples
 
