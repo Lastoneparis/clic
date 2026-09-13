@@ -39,6 +39,7 @@ Worked through iteratively. Checked = done & pushed.
 ## Adoption / "serious competitor" paths
 - [x] Python host API (`import clic`; run a kernel in a few lines) — `python/`
 - [x] end-to-end MLP inference demo — composed kernels via Python (`python/mlp_demo.py`)
+- [x] end-to-end transformer forward pass (rmsnorm→attention→FFN→logits→argmax) — `python/transformer_demo.py`
 - [x] a `clic` CLI (`clic build` / `run` / `bench` / `sim`) — `bin/clic`
 - [ ] a dedicated clic IR (decouple front-end from backends)
 - [x] RTL compute core — synthesizable `N×N` systolic MAC array, verified in

@@ -97,8 +97,9 @@ out = clic.run("examples/saxpy.clic", "saxpy", grid=[8, 1, 1],
 print(out["y"])   # [10.0, 13.0, 16.0, 19.0, 22.0, 25.0, 28.0, 31.0]
 ```
 
-Kernels **compose into real inference** — `python/mlp_demo.py` runs a 2-layer MLP
-(`relu(X·W1+b1)·W2+b2`) on the GPU and matches a CPU reference.
+Kernels **compose into real inference** — `python/mlp_demo.py` runs a 2-layer MLP,
+and **`python/transformer_demo.py` runs a full transformer forward pass**
+(rmsnorm → attention → FFN → logits → argmax) on the GPU, matching a CPU reference.
 
 ## The language, at a glance
 
