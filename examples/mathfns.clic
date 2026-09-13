@@ -1,0 +1,21 @@
+// mathfns.clic — exercises the math stdlib builtins added in this iteration:
+// rsqrt, sin, cos, tan, atan2, exp2, log2, fract, sign, trunc.
+// Each thread maps one input to a composite of all ten, so a single GPU run
+// verifies every new builtin against the CPU reference at once.
+
+kernel mathfns(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        let v = x[i];
+        var acc: f32 = 0.0;
+        acc = acc + rsqrt(v * v + 1.0);     // always positive domain
+        acc = acc + sin(v) - cos(v);
+        acc = acc + tan(clamp(v, -1.0, 1.0));
+        acc = acc + atan2(v, 1.0);
+        acc = acc + exp2(fract(v));          // fract in [0,1) -> exp2 in [1,2)
+        acc = acc + log2(v * v + 2.0);       // always > 0
+        acc = acc + sign(v);
+        acc = acc + trunc(v);
+        y[i] = acc;
+    }
+}

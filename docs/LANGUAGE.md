@@ -73,9 +73,11 @@ Indexing `a[i]`, member `v.x`, calls `f(a, b)`.
 
 ## Built-in functions
 
-`min`, `max`, `abs`, `clamp`, `sqrt`, `exp`, `log`, `pow`, `fma`, `floor`,
-`ceil`, `tanh`; casts `float(x)`, `int(x)`, `uint(x)`; `rotr(x, n)`
-(32-bit rotate-right, for crypto); `barrier()`.
+`min`, `max`, `abs`, `clamp`, `sqrt`, `rsqrt`, `exp`, `exp2`, `log`, `log2`,
+`pow`, `fma`, `floor`, `ceil`, `trunc`, `round`, `fract`, `sign`, `tanh`,
+`sin`, `cos`, `tan`, `atan2`, `dot`; casts `float(x)`, `int(x)`, `uint(x)`,
+`half(x)`, `float4(...)`; `rotr(x, n)` (32-bit rotate-right, for crypto);
+`barrier()`.
 
 ## Standard library
 

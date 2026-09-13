@@ -359,7 +359,10 @@ _TYMAP = {'i32': 'int', 'u32': 'uint', 'f32': 'float', 'f16': 'half',
 # builtin functions passed straight through to MSL
 _BUILTINS = {'float', 'int', 'uint', 'half', 'char', 'uchar', 'float4', 'dot',
              'min', 'max', 'abs', 'sqrt', 'exp', 'log', 'pow', 'fma', 'floor',
-             'ceil', 'tanh', 'clamp', 'round'}
+             'ceil', 'tanh', 'clamp', 'round',
+             # math stdlib (all genuine Metal functions)
+             'rsqrt', 'sin', 'cos', 'tan', 'atan2', 'exp2', 'log2',
+             'fract', 'sign', 'trunc'}
 _USER_FNS = set()      # names of user-defined fns (populated per compile)
 _ASSIGN_OPS = {'=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>='}
 

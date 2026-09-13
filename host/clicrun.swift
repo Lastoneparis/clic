@@ -232,6 +232,23 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "mathfns" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    var maxRel = 0.0
+    for i in 0..<n {
+        let v = x[i]
+        var ref: Float = 0
+        ref += 1.0 / (v * v + 1.0).squareRoot()          // rsqrt
+        ref += sin(v) - cos(v)
+        ref += tan(min(max(v, -1.0), 1.0))
+        ref += atan2(v, 1.0)
+        ref += exp2(v - floor(v))                         // exp2(fract)
+        ref += log2(v * v + 2.0)
+        ref += (v > 0 ? 1 : (v < 0 ? -1 : 0))             // sign
+        ref += v.rounded(.towardZero)                     // trunc
+        if abs(ref) > 1e-4 { maxRel = max(maxRel, Double(abs(y[i] - ref) / abs(ref))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, math stdlib)", maxRel)
 } else if verify == "bmm" {
     let Bt = Int(scalar("Bt")); let M = Int(scalar("M")); let N = Int(scalar("N")); let K = Int(scalar("K"))
     let A = hostF["A"]!; let B = hostF["B"]!; let C = bufF("C")
