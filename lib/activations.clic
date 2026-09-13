@@ -21,3 +21,8 @@ fn gelu(x: f32) -> f32 {
     let inner = c * (x + 0.044715 * x * x * x);
     return 0.5 * x * (1.0 + tanh(inner));
 }
+
+// SiLU / Swish — x * sigmoid(x); the activation inside SwiGLU (LLaMA / Mistral).
+fn silu(x: f32) -> f32 {
+    return x * sigmoid(x);
+}

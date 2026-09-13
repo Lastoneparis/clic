@@ -388,6 +388,14 @@ if verify == "saxpy" {
         checks += 1; if C[r*N+c] != Float(acc) { errs += 1 }
     }
     verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) INT8 GEMM elems exact)"
+} else if verify == "silu" {
+    let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
+    var maxRel = 0.0
+    for i in stride(from: 0, to: n, by: max(1, n / 4096)) {
+        let ref = x[i] / (1 + exp(-x[i]))          // x * sigmoid(x)
+        maxRel = max(maxRel, Double(abs(y[i] - ref) / max(abs(ref), 1e-3)))
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, SiLU)", maxRel)
 } else if verify == "quant_i8" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var maxErr = 0.0

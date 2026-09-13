@@ -15,7 +15,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] vector type `f32x4` + swizzles — verified on GPU (`examples/vec4.clic`)
 
 ## Standard library
-- [x] activations (relu, leaky_relu, sigmoid, gelu)
+- [x] activations (relu, leaky_relu, sigmoid, gelu, silu/swish)
 - [x] linear_gelu (transformer FFN: dense + bias + GELU) — `examples/linear_gelu.clic`
 - [x] reductions (parallel tree sum) — `examples/reduce.clic`
 - [x] prefix sum / inclusive scan (Hillis-Steele) — `examples/scan.clic`

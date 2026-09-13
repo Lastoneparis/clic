@@ -1,0 +1,11 @@
+// silu.clic — apply the SiLU/Swish activation (from the stdlib) elementwise.
+// y = x * sigmoid(x).  The activation inside SwiGLU (LLaMA / Mistral FFN).
+
+include "../lib/activations.clic"
+
+kernel silu_apply(n: i32, x: buffer<f32>, y: buffer<f32>) {
+    let i = tid.x;
+    if (i < n) {
+        y[i] = silu(x[i]);
+    }
+}
