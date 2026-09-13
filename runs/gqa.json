@@ -1,0 +1,19 @@
+{
+  "kernel": "gqa",
+  "metal": "../build/gqa.metal",
+  "grid": [32, 8, 1],
+  "threadgroup": [16, 8, 1],
+  "iters": 50,
+  "verify": "gqa",
+  "bindings": [
+    { "name": "S",     "kind": "scalar", "type": "i32", "value": 32 },
+    { "name": "Hq",    "kind": "scalar", "type": "i32", "value": 8 },
+    { "name": "Hkv",   "kind": "scalar", "type": "i32", "value": 2 },
+    { "name": "Dh",    "kind": "scalar", "type": "i32", "value": 16 },
+    { "name": "scale", "kind": "scalar", "type": "f32", "value": 0.25 },
+    { "name": "Q",     "kind": "buffer", "type": "f32", "len": 4096, "init": "random" },
+    { "name": "K",     "kind": "buffer", "type": "f32", "len": 1024, "init": "random" },
+    { "name": "V",     "kind": "buffer", "type": "f32", "len": 1024, "init": "random" },
+    { "name": "O",     "kind": "buffer", "type": "f32", "len": 4096, "init": "zero" }
+  ]
+}

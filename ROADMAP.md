@@ -26,6 +26,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [x] scaled dot-product attention — `examples/attention.clic` (transformer core)
 - [x] flash-attention-style online-softmax attention (single streaming pass, O(D) memory, no sequence cap) — `examples/flash_attn.clic`, matches plain attention on GPU
+- [x] grouped-query attention (GQA, shared KV heads — Mistral's KV-cache saver) — `examples/gqa.clic`, verified on GPU
 - [x] RMSNorm (LLaMA / Mistral normalization) — `examples/nn.clic`
 - [x] RoPE rotary positional embedding (LLaMA / Mistral) — `examples/rope.clic`, verified on GPU
 - [x] conv2d — `examples/conv2d.clic` (CNN core)

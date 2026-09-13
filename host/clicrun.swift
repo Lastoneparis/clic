@@ -467,6 +467,31 @@ if verify == "saxpy" {
         }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, attention)", maxRel)
+} else if verify == "gqa" {
+    let S = Int(scalar("S")); let Hq = Int(scalar("Hq")); let Hkv = Int(scalar("Hkv"))
+    let Dh = Int(scalar("Dh")); let scale = Float(scalar("scale"))
+    let Q = hostF["Q"]!; let K = hostF["K"]!; let V = hostF["V"]!; let O = bufF("O")
+    let group = Hq / Hkv
+    var maxRel = 0.0
+    for _ in 0..<8 {
+        let i = Int.random(in: 0..<S); let h = Int.random(in: 0..<Hq)
+        let kv = h / group
+        var sc = [Float](repeating: 0, count: S); var m = -Float.greatestFiniteMagnitude
+        for j in 0..<S {
+            var a: Float = 0
+            for d in 0..<Dh { a += Q[i*(Hq*Dh)+h*Dh+d] * K[j*(Hkv*Dh)+kv*Dh+d] }
+            a *= scale; sc[j] = a; m = max(m, a)
+        }
+        var s: Float = 0
+        for j in 0..<S { sc[j] = exp(sc[j] - m); s += sc[j] }
+        for d in 0..<Dh {
+            var o: Float = 0
+            for j in 0..<S { o += sc[j] * V[j*(Hkv*Dh)+kv*Dh+d] }
+            let ref = o / s
+            if abs(ref) > 1e-4 { maxRel = max(maxRel, Double(abs(O[i*(Hq*Dh)+h*Dh+d] - ref) / abs(ref))) }
+        }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, grouped-query attention)", maxRel)
 } else if verify == "swiglu" {
     let T = Int(scalar("T")); let D = Int(scalar("D")); let H = Int(scalar("H"))
     let x = hostF["x"]!; let Wg = hostF["Wg"]!; let Wu = hostF["Wu"]!; let out = bufF("out")

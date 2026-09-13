@@ -1,0 +1,48 @@
+// gqa.clic — grouped-query attention (GQA), as used by Mistral.
+//
+// Standard multi-head attention gives every query head its own key/value head.
+// GQA shares one KV head across a GROUP of query heads (here Hq query heads,
+// Hkv KV heads, group = Hq/Hkv), which shrinks the KV cache — the dominant
+// memory cost of LLM inference — with almost no quality loss. That is exactly
+// why Mistral uses it. One thread per (query token, query head); the head maps
+// to its shared KV head kv = h / group.
+//
+//   Q : [S, Hq, Dh]      K,V : [S, Hkv, Dh]      O : [S, Hq, Dh]      (S <= 64)
+
+kernel gqa(S: i32, Hq: i32, Hkv: i32, Dh: i32, scale: f32,
+           Q: buffer<f32>, K: buffer<f32>, V: buffer<f32>, O: buffer<f32>) {
+    let i = tid.x;                          // query token
+    let h = tid.y;                          // query head
+    if (i < S && h < Hq) {
+        let group = Hq / Hkv;
+        let kv = h / group;                 // the KV head this query head shares
+        var scores: array<f32, 64>;
+
+        var m = -1.0e30;
+        for (var j: i32 = 0; j < S; j = j + 1) {
+            var acc: f32 = 0.0;
+            for (var d: i32 = 0; d < Dh; d = d + 1) {
+                acc = acc + Q[i * (Hq * Dh) + h * Dh + d]
+                          * K[j * (Hkv * Dh) + kv * Dh + d];
+            }
+            acc = acc * scale;
+            scores[j] = acc;
+            m = max(m, acc);
+        }
+
+        var s = 0.0;
+        for (var j: i32 = 0; j < S; j = j + 1) {
+            let e = exp(scores[j] - m);
+            scores[j] = e;
+            s = s + e;
+        }
+
+        for (var d: i32 = 0; d < Dh; d = d + 1) {
+            var o: f32 = 0.0;
+            for (var j: i32 = 0; j < S; j = j + 1) {
+                o = o + scores[j] * V[j * (Hkv * Dh) + kv * Dh + d];
+            }
+            O[i * (Hq * Dh) + h * Dh + d] = o / s;
+        }
+    }
+}
