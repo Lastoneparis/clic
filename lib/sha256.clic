@@ -1,0 +1,19 @@
+// sha256.clic — SHA-256 as a reusable callable module.
+//
+// The six core round functions of FIPS 180-4, as clic device functions so any
+// kernel can `include "../lib/sha256.clic"` and build a hasher without pasting
+// the bit twiddling. Everything is 32-bit unsigned; `rotr` is clic's built-in
+// 32-bit rotate-right. Compose them as: schedule with ssig0/ssig1, then run the
+// 64 compression rounds with bsig0/bsig1/ch/maj.
+
+// Message-schedule sigmas (lowercase sigma in the spec).
+fn sha_ssig0(x: u32) -> u32 { return rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3); }
+fn sha_ssig1(x: u32) -> u32 { return rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10); }
+
+// Compression sigmas (uppercase Sigma in the spec).
+fn sha_bsig0(x: u32) -> u32 { return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22); }
+fn sha_bsig1(x: u32) -> u32 { return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25); }
+
+// Choice and majority.
+fn sha_ch(x: u32, y: u32, z: u32) -> u32 { return (x & y) ^ ((~x) & z); }
+fn sha_maj(x: u32, y: u32, z: u32) -> u32 { return (x & y) ^ (x & z) ^ (y & z); }

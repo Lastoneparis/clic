@@ -8,9 +8,14 @@
 // board's strongest demo later; here it proves clic's bitwise/rotate/array
 // features on the GPU.
 //
+// The round functions now live in a reusable module — this file just wires
+// them into a full hasher. `include` pulls them in textually.
+//
 // K   = the 64 SHA-256 round constants (filled by the host)
 // Hin = the 8 initial hash values     (filled by the host)
 // out = 8 words per thread (the digest)
+
+include "../lib/sha256.clic"
 
 kernel sha256(base: u32, K: buffer<u32>, Hin: buffer<u32>, out: buffer<u32>) {
     let id = tid.x;
@@ -24,13 +29,9 @@ kernel sha256(base: u32, K: buffer<u32>, Hin: buffer<u32>, out: buffer<u32>) {
     }
     w[15] = uint(32);                // message length in bits (4 bytes)
 
-    // Message schedule: extend the 16 words to 64.
+    // Message schedule: extend the 16 words to 64 (module sigmas).
     for (var t: i32 = 16; t < 64; t = t + 1) {
-        var x  = w[t - 15];
-        var s0 = rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3);
-        var y  = w[t - 2];
-        var s1 = rotr(y, 17) ^ rotr(y, 19) ^ (y >> 10);
-        w[t] = w[t - 16] + s0 + w[t - 7] + s1;
+        w[t] = w[t - 16] + sha_ssig0(w[t - 15]) + w[t - 7] + sha_ssig1(w[t - 2]);
     }
 
     // Working variables.
@@ -43,14 +44,10 @@ kernel sha256(base: u32, K: buffer<u32>, Hin: buffer<u32>, out: buffer<u32>) {
     var g = Hin[6];
     var h = Hin[7];
 
-    // 64 compression rounds.
+    // 64 compression rounds (module round functions).
     for (var t: i32 = 0; t < 64; t = t + 1) {
-        var S1  = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
-        var ch  = (e & f) ^ ((~e) & g);
-        var t1  = h + S1 + ch + K[t] + w[t];
-        var S0  = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
-        var maj = (a & b) ^ (a & c) ^ (b & c);
-        var t2  = S0 + maj;
+        var t1 = h + sha_bsig1(e) + sha_ch(e, f, g) + K[t] + w[t];
+        var t2 = sha_bsig0(a) + sha_maj(a, b, c);
         h = g;
         g = f;
         f = e;

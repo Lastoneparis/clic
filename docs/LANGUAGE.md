@@ -83,8 +83,10 @@ Indexing `a[i]`, member `v.x`, calls `f(a, b)`.
 
 ## Standard library
 
-`lib/activations.clic` provides `relu`, `leaky_relu`, `sigmoid`, `gelu`.
-Pull it in with `include`.
+`lib/activations.clic` provides `relu`, `leaky_relu`, `sigmoid`, `gelu`, `silu`.
+`lib/sha256.clic` provides the SHA-256 round functions (`sha_ssig0/1`,
+`sha_bsig0/1`, `sha_ch`, `sha_maj`) for building a hasher. Pull either in
+with `include`.
 
 ## Complete examples
 

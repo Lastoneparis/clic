@@ -31,7 +31,8 @@ Worked through iteratively. Checked = done & pushed.
 - [x] INT8 GEMM (i8×i8 → i32 accumulate) — `examples/gemm_i8.clic` (the OSHI-A1 datapath)
 - [x] batched matmul (`bmm`, `tid.z` selects batch) — `examples/bmm.clic` (multi-head attention primitive)
 - [x] math stdlib: `rsqrt sin cos tan atan2 exp2 log2 fract sign trunc` — verified on GPU (`examples/mathfns.clic`)
-- [ ] crypto: sha256 as a callable module; keccak
+- [x] crypto: sha256 as a callable module (`lib/sha256.clic`, 6 device fns) — `examples/sha256.clic` includes it, 1001/1001 vs CryptoKit
+- [ ] crypto: keccak / SHA3-256 — needs a `u64` type first (64-bit lanes)
 
 ## Manual & docs
 - [x] LANGUAGE.md reference
