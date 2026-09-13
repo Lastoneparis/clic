@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use clic, please cite it as below."
+title: "clic — an open, vendor-neutral compute language"
+abstract: >-
+  clic is an open, vendor-neutral compute language that keeps CUDA's
+  grid-of-threads model without the lock-in. It compiles to Apple Metal today
+  and targets FPGA / custom silicon (the OSHI-A1 accelerator) next, with a
+  verified library spanning AI (GEMM, attention, softmax, layernorm, RMSNorm,
+  conv2d, INT8), hashing (SHA-256), and graphics.
+type: software
+authors:
+  - family-names: Moriceau
+    given-names: Hugo
+version: 0.1.0
+date-released: 2026-09-11
+license: MIT
+repository-code: "https://github.com/Lastoneparis/clic"
+url: "https://github.com/Lastoneparis/clic"
+keywords:
+  - GPU
+  - compiler
+  - CUDA alternative
+  - AI accelerator
+  - inference
+  - Metal
+  - FPGA
+  - RISC-V
+  - open source
