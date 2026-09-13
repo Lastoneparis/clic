@@ -268,6 +268,15 @@ if verify == "saxpy" {
     for i in 0..<n { ref += Double(x[i]) }
     let rel = ref != 0 ? abs(gpu - ref) / abs(ref) : abs(gpu)
     verifyMsg = (rel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (sum rel err %.2e)", rel)
+} else if verify == "reduce_max" {
+    let n = Int(scalar("n")); let x = hostF["x"]!
+    let partials = bufF("partials")
+    let np = bindings.first(where: { $0.name == "partials" })!.len
+    var gpu = -Float.greatestFiniteMagnitude
+    for i in 0..<np { gpu = max(gpu, partials[i]) }
+    var ref = -Float.greatestFiniteMagnitude
+    for i in 0..<n { ref = max(ref, x[i]) }
+    verifyMsg = (gpu == ref ? "PASS" : "FAIL") + " (max exact)"
 } else if verify == "softmax" {
     let R = Int(scalar("R")); let C = Int(scalar("C"))
     let x = hostF["x"]!; let y = bufF("y")

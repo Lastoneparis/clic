@@ -28,3 +28,26 @@ kernel reduce_sum(n: i32, x: buffer<f32>, partials: buffer<f32>) {
         partials[bid.x] = scratch[0];
     }
 }
+
+// reduce_max — the same tree pattern, combining with max instead of +.
+kernel reduce_max(n: i32, x: buffer<f32>, partials: buffer<f32>) {
+    var scratch: threadgroup array<f32, 256>;
+    let lx = ltid.x;
+    let gi = tid.x;
+
+    if (gi < n) { scratch[lx] = x[gi]; } else { scratch[lx] = -1.0e30; }
+    barrier();
+
+    var stride = 128;
+    while (stride > 0) {
+        if (lx < stride) {
+            scratch[lx] = max(scratch[lx], scratch[lx + stride]);
+        }
+        barrier();
+        stride /= 2;
+    }
+
+    if (lx == 0) {
+        partials[bid.x] = scratch[0];
+    }
+}

@@ -21,7 +21,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] prefix sum / inclusive scan (Hillis-Steele) — `examples/scan.clic`
 - [x] argmax (greedy decode / token selection) — `examples/argmax.clic`
 - [x] transpose (matrix utility) — `examples/transpose.clic`
-- [ ] reduction: max variant
+- [x] reduction: max variant (`reduce_max`) — `examples/reduce.clic`
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [x] scaled dot-product attention — `examples/attention.clic` (transformer core)
 - [x] RMSNorm (LLaMA / Mistral normalization) — `examples/nn.clic`
