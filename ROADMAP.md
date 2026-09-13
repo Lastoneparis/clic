@@ -17,6 +17,7 @@ Worked through iteratively. Checked = done & pushed.
 ## Standard library
 - [x] activations (relu, leaky_relu, sigmoid, gelu, silu/swish)
 - [x] linear_gelu (transformer FFN: dense + bias + GELU) — `examples/linear_gelu.clic`
+- [x] SwiGLU FFN (LLaMA/Mistral: SiLU-gated dual projection, fused) — `examples/swiglu.clic`, verified on GPU
 - [x] reductions (parallel tree sum) — `examples/reduce.clic`
 - [x] prefix sum / inclusive scan (Hillis-Steele) — `examples/scan.clic`
 - [x] argmax (greedy decode / token selection) — `examples/argmax.clic`

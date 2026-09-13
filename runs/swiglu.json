@@ -1,0 +1,17 @@
+{
+  "kernel": "swiglu",
+  "metal": "../build/swiglu.metal",
+  "grid": [128, 32, 1],
+  "threadgroup": [16, 16, 1],
+  "iters": 100,
+  "verify": "swiglu",
+  "bindings": [
+    { "name": "T",  "kind": "scalar", "type": "i32", "value": 32 },
+    { "name": "D",  "kind": "scalar", "type": "i32", "value": 64 },
+    { "name": "H",  "kind": "scalar", "type": "i32", "value": 128 },
+    { "name": "x",  "kind": "buffer", "type": "f32", "len": 2048, "init": "random" },
+    { "name": "Wg", "kind": "buffer", "type": "f32", "len": 8192, "init": "random" },
+    { "name": "Wu", "kind": "buffer", "type": "f32", "len": 8192, "init": "random" },
+    { "name": "out","kind": "buffer", "type": "f32", "len": 4096, "init": "zero" }
+  ]
+}

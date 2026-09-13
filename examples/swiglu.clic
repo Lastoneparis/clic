@@ -1,0 +1,28 @@
+// swiglu.clic — the SwiGLU feed-forward block used by LLaMA and Mistral.
+//
+// A transformer FFN in these models is  W2 · ( SiLU(x·Wg) ⊙ (x·Wu) ) : two
+// parallel projections of the token (a gate and an "up"), the gate passed
+// through SiLU, multiplied elementwise, then projected back down. This kernel
+// computes the hidden activation h = SiLU(x·Wg) ⊙ (x·Wu) — the novel, fused
+// part; the down-projection W2 is a plain GEMM. One thread per (token, hidden)
+// element, fusing both projections + SiLU + the gate in a single pass.
+//
+//   x  : [T, D]   tokens        Wg : [D, H]  gate weights
+//   Wu : [D, H]   up weights     out (h) : [T, H]
+
+kernel swiglu(T: i32, D: i32, H: i32,
+              x: buffer<f32>, Wg: buffer<f32>, Wu: buffer<f32>, out: buffer<f32>) {
+    let j = tid.x;                          // hidden unit
+    let t = tid.y;                          // token row
+    if (t < T && j < H) {
+        var gate: f32 = 0.0;
+        var up: f32 = 0.0;
+        for (var d: i32 = 0; d < D; d = d + 1) {
+            let xv = x[t * D + d];
+            gate = gate + xv * Wg[d * H + j];
+            up   = up   + xv * Wu[d * H + j];
+        }
+        let s = gate / (1.0 + exp(-gate));  // SiLU(gate) = gate * sigmoid(gate)
+        out[t * H + j] = s * up;
+    }
+}

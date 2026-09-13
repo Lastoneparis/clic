@@ -467,6 +467,18 @@ if verify == "saxpy" {
         }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, attention)", maxRel)
+} else if verify == "swiglu" {
+    let T = Int(scalar("T")); let D = Int(scalar("D")); let H = Int(scalar("H"))
+    let x = hostF["x"]!; let Wg = hostF["Wg"]!; let Wu = hostF["Wu"]!; let out = bufF("out")
+    var maxRel = 0.0
+    for _ in 0..<16 {
+        let t = Int.random(in: 0..<T); let j = Int.random(in: 0..<H)
+        var gate: Float = 0; var up: Float = 0
+        for d in 0..<D { let xv = x[t*D+d]; gate += xv * Wg[d*H+j]; up += xv * Wu[d*H+j] }
+        let ref = (gate / (1 + exp(-gate))) * up
+        if abs(ref) > 1e-4 { maxRel = max(maxRel, Double(abs(out[t*H+j] - ref) / abs(ref))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, SwiGLU FFN)", maxRel)
 } else if verify == "rope" {
     let S = Int(scalar("S")); let D = Int(scalar("D")); let base = Float(scalar("base"))
     let X = hostF["X"]!; let O = bufF("O")

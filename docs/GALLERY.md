@@ -71,6 +71,7 @@ out[r] = uint(bi);
 - **Scaled dot-product attention** — [`examples/attention.clic`](../examples/attention.clic).
 - **Flash-attention (online softmax)** — single streaming pass, O(D) memory, no sequence cap — [`examples/flash_attn.clic`](../examples/flash_attn.clic).
 - **RoPE** (rotary positional embedding, LLaMA/Mistral) — [`examples/rope.clic`](../examples/rope.clic).
+- **SwiGLU FFN** (SiLU-gated dual projection, LLaMA/Mistral) — [`examples/swiglu.clic`](../examples/swiglu.clic).
 - **SHA-256** (bitwise/`rotr`, local arrays) — [`examples/sha256.clic`](../examples/sha256.clic).
 - **Keccak-f[1600]** (SHA-3 / keccak256 core; `u64` lanes, 64-bit rotates) — [`examples/keccak.clic`](../examples/keccak.clic).
 - **SHA3-256** (full hasher: absorb + pad + squeeze; matches the NIST empty-string vector) — [`examples/sha3_256.clic`](../examples/sha3_256.clic).
