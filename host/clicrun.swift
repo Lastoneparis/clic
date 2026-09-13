@@ -232,6 +232,22 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "sha3_256" {
+    let out = bufU("out")
+    // GPU digest as 32 little-endian bytes
+    var got = [UInt8](repeating: 0, count: 32)
+    for i in 0..<8 {
+        let w = out[i]
+        got[i*4+0] = UInt8(w & 0xff); got[i*4+1] = UInt8((w >> 8) & 0xff)
+        got[i*4+2] = UInt8((w >> 16) & 0xff); got[i*4+3] = UInt8((w >> 24) & 0xff)
+    }
+    // canonical KAT: SHA3-256("")
+    let want: [UInt8] = [0xa7,0xff,0xc6,0xf8,0xbf,0x1e,0xd7,0x66,0x51,0xc1,0x47,0x56,
+        0xa0,0x61,0xd6,0x62,0xf5,0x80,0xff,0x4d,0xe4,0x3b,0x49,0xfa,
+        0x82,0xd8,0x0a,0x4b,0x80,0xf8,0x43,0x4a]
+    let ok = (got == want)
+    let hex = got.map { String(format: "%02x", $0) }.joined()
+    verifyMsg = (ok ? "PASS" : "FAIL") + " (SHA3-256(\"\") = \(hex))"
 } else if verify == "keccak" {
     let out = bufU("out")
     var gpu = [UInt64](repeating: 0, count: 25)

@@ -1,0 +1,13 @@
+{
+  "kernel": "sha3_256",
+  "metal": "../build/sha3_256.metal",
+  "grid": [1, 1, 1],
+  "threadgroup": [1, 1, 1],
+  "iters": 100,
+  "verify": "sha3_256",
+  "bindings": [
+    { "name": "msglen", "kind": "scalar", "type": "i32", "value": 0 },
+    { "name": "msg", "kind": "buffer", "type": "u32", "len": 34, "init": "zero" },
+    { "name": "out", "kind": "buffer", "type": "u32", "len": 8,  "init": "zero" }
+  ]
+}
