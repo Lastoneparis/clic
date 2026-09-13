@@ -98,8 +98,11 @@ print(out["y"])   # [10.0, 13.0, 16.0, 19.0, 22.0, 25.0, 28.0, 31.0]
 ```
 
 Kernels **compose into real inference** — `python/mlp_demo.py` runs a 2-layer MLP,
-and **`python/transformer_demo.py` runs a full transformer forward pass**
-(rmsnorm → attention → FFN → logits → argmax) on the GPU, matching a CPU reference.
+`python/transformer_demo.py` runs a full transformer forward pass
+(rmsnorm → attention → FFN → logits → argmax), and
+**`python/mistral_block_demo.py` runs a full Mistral-style decoder block**
+(rmsnorm → RoPE → attention → residual → rmsnorm → SwiGLU → down → residual)
+on the GPU, each matching a CPU reference.
 
 ## The language, at a glance
 

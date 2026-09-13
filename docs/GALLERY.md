@@ -82,5 +82,8 @@ out[r] = uint(bi);
 - `python/mlp_demo.py` — a 2-layer MLP on the GPU.
 - `python/transformer_demo.py` — a **full transformer forward pass**
   (rmsnorm → attention → FFN → logits → argmax), verified end to end.
+- `python/mistral_block_demo.py` — a **full Mistral-style decoder block**
+  (rmsnorm → RoPE → attention → residual → rmsnorm → SwiGLU → down → residual),
+  verified end to end.
 
 See the [language reference](LANGUAGE.md) and the [tutorial](TUTORIAL.md).
