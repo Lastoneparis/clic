@@ -32,7 +32,7 @@ Worked through iteratively. Checked = done & pushed.
 ## Manual & docs
 - [x] LANGUAGE.md reference
 - [x] TUTORIAL.md — write your first kernel, step by step
-- [ ] MANIFESTS.md — the run-manifest format
+- [x] MANIFESTS.md — the run-manifest format
 - [x] COMPARISON.md — clic vs CUDA (honest positioning)
 - [ ] examples gallery in the README
 

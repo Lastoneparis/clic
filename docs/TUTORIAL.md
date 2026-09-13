@@ -69,6 +69,8 @@ The runtime, `clicrun`, is told what to run by a small JSON file. Here is
 - `flops` (optional) makes the runtime print GFLOP/s; `verify` selects a
   built-in CPU/reference check.
 
+Full field reference: [MANIFESTS.md](MANIFESTS.md).
+
 ## 5. Write your own kernel
 
 Let's square every element of an array: `y[i] = x[i] * x[i]`.
