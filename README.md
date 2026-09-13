@@ -129,7 +129,8 @@ kernel linear_relu(/* ... */) {
 
 Plus `threadgroup` (shared) memory, `barrier()`, bitwise ops and `rotr` (for
 crypto), local `array<T,N>`, and per-group ids `ltid`/`bid`. Full reference:
-**[docs/LANGUAGE.md](docs/LANGUAGE.md)**. Kernels in [`examples/`](examples/).
+**[docs/LANGUAGE.md](docs/LANGUAGE.md)**. Kernels in [`examples/`](examples/), or
+tour them in the **[gallery](docs/GALLERY.md)**.
 
 ## How it's built
 

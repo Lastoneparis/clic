@@ -34,7 +34,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] TUTORIAL.md — write your first kernel, step by step
 - [x] MANIFESTS.md — the run-manifest format
 - [x] COMPARISON.md — clic vs CUDA (honest positioning)
-- [ ] examples gallery in the README
+- [x] examples gallery — `docs/GALLERY.md`
 
 ## Adoption / "serious competitor" paths
 - [x] Python host API (`import clic`; run a kernel in a few lines) — `python/`
