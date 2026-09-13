@@ -20,6 +20,7 @@ python3 clicc.py examples/quant.clic       -o build/quant.metal
 python3 clicc.py examples/silu.clic        -o build/silu.metal
 python3 clicc.py examples/attention.clic   -o build/attention.metal
 python3 clicc.py examples/conv2d.clic      -o build/conv2d.metal
+python3 clicc.py examples/conv2d_mc.clic   -o build/conv2d_mc.metal
 python3 clicc.py examples/scan.clic        -o build/scan.metal
 python3 clicc.py examples/argmax.clic      -o build/argmax.metal
 python3 clicc.py examples/vec4.clic        -o build/vec4.metal
@@ -31,7 +32,7 @@ echo "==> [2/3] building GPU host (clicrun.swift)"
 swiftc -O host/clicrun.swift -o build/clicrun
 
 echo "==> [3/3] running on the GPU"
-for r in saxpy gemm gemm_tiled gemm_i8 linear_relu linear linear_gelu reduce softmax layernorm rmsnorm attention conv2d scan argmax vec4 clamp scale_half quant silu collatz sha256 raster; do
+for r in saxpy gemm gemm_tiled gemm_i8 linear_relu linear linear_gelu reduce softmax layernorm rmsnorm attention conv2d conv2d_mc scan argmax vec4 clamp scale_half quant silu collatz sha256 raster; do
     echo
     ./build/clicrun "runs/$r.json"
 done

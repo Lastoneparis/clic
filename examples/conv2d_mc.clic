@@ -1,0 +1,26 @@
+// conv2d_mc.clic — multi-channel 2D convolution (Cin -> Cout), valid padding.
+//   Out[co,oy,ox] = sum_{ci,ky,kx} In[ci, oy+ky, ox+kx] * W[co,ci,ky,kx]
+// What real CNN layers use. One thread per output element (uses tid.z for the
+// output channel). Layouts: In[ci][y][x], W[co][ci][ky][kx], Out[co][oy][ox].
+
+kernel conv2d_mc(Cin: i32, Cout: i32, H: i32, W: i32, KH: i32, KW: i32,
+                 In: buffer<f32>, Wt: buffer<f32>, Out: buffer<f32>) {
+    let ox = tid.x;
+    let oy = tid.y;
+    let co = tid.z;
+    let OW = W - KW + 1;
+    let OH = H - KH + 1;
+    if (ox < OW && oy < OH && co < Cout) {
+        var acc: f32 = 0.0;
+        for (var ci: i32 = 0; ci < Cin; ci = ci + 1) {
+            for (var ky: i32 = 0; ky < KH; ky = ky + 1) {
+                for (var kx: i32 = 0; kx < KW; kx = kx + 1) {
+                    let iv = In[(ci * H + (oy + ky)) * W + (ox + kx)];
+                    let wv = Wt[((co * Cin + ci) * KH + ky) * KW + kx];
+                    acc = acc + iv * wv;
+                }
+            }
+        }
+        Out[(co * OH + oy) * OW + ox] = acc;
+    }
+}

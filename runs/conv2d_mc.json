@@ -1,0 +1,19 @@
+{
+  "kernel": "conv2d_mc",
+  "metal": "../build/conv2d_mc.metal",
+  "grid": [30, 30, 8],
+  "threadgroup": [10, 10, 1],
+  "iters": 50,
+  "verify": "conv2d_mc",
+  "bindings": [
+    { "name": "Cin",  "kind": "scalar", "type": "i32", "value": 4 },
+    { "name": "Cout", "kind": "scalar", "type": "i32", "value": 8 },
+    { "name": "H",    "kind": "scalar", "type": "i32", "value": 32 },
+    { "name": "W",    "kind": "scalar", "type": "i32", "value": 32 },
+    { "name": "KH",   "kind": "scalar", "type": "i32", "value": 3 },
+    { "name": "KW",   "kind": "scalar", "type": "i32", "value": 3 },
+    { "name": "In",   "kind": "buffer", "type": "f32", "len": 4096, "init": "random" },
+    { "name": "Wt",   "kind": "buffer", "type": "f32", "len": 288,  "init": "random" },
+    { "name": "Out",  "kind": "buffer", "type": "f32", "len": 7200, "init": "zero" }
+  ]
+}

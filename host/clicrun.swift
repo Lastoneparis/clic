@@ -367,6 +367,22 @@ if verify == "saxpy" {
         checks += 1; if Int(out[r]) != bi { errs += 1 }
     }
     verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) argmax indices exact)"
+} else if verify == "conv2d_mc" {
+    let Cin = Int(scalar("Cin")); let Cout = Int(scalar("Cout"))
+    let H = Int(scalar("H")); let W = Int(scalar("W"))
+    let KH = Int(scalar("KH")); let KW = Int(scalar("KW"))
+    let OW = W - KW + 1, OH = H - KH + 1
+    let In = hostF["In"]!; let Wt = hostF["Wt"]!; let Out = bufF("Out")
+    var maxRel = 0.0
+    for _ in 0..<24 {
+        let co = Int.random(in: 0..<Cout), oy = Int.random(in: 0..<OH), ox = Int.random(in: 0..<OW)
+        var acc: Float = 0
+        for ci in 0..<Cin { for ky in 0..<KH { for kx in 0..<KW {
+            acc += In[(ci*H + (oy+ky))*W + (ox+kx)] * Wt[((co*Cin+ci)*KH+ky)*KW+kx]
+        }}}
+        if abs(acc) > 1e-4 { maxRel = max(maxRel, Double(abs(Out[(co*OH+oy)*OW+ox] - acc) / abs(acc))) }
+    }
+    verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (rel %.1e, conv2d Cin=%d Cout=%d)", maxRel, Cin, Cout)
 } else if verify == "scan" {
     let n = Int(scalar("n")); let x = hostF["x"]!; let y = bufF("y")
     var acc: Float = 0; var maxRel = 0.0
