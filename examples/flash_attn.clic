@@ -1,0 +1,45 @@
+// flash_attn.clic — flash-attention-style online-softmax attention.
+//   O = softmax(Q·Kᵀ · scale) · V           (scale = 1/sqrt(D))
+//
+// Same result as examples/attention.clic, but computed the way FlashAttention
+// does it: a SINGLE streaming pass over the keys, keeping a running max `m`, a
+// running softmax denominator `l`, and a running output accumulator, rescaling
+// them as a new larger score appears. No per-row score array — memory is O(D)
+// (the head dim) instead of O(S) (the sequence), so it has no fixed sequence
+// cap and is exactly how production LLM attention avoids materialising the
+// S×S score matrix. One thread per query row; head dim D ≤ 128.
+
+kernel flash_attn(S: i32, D: i32, scale: f32,
+                  Q: buffer<f32>, K: buffer<f32>, V: buffer<f32>, O: buffer<f32>) {
+    let i = tid.x;
+    if (i < S) {
+        var acc: array<f32, 128>;               // running output, O(D)
+        for (var d: i32 = 0; d < D; d = d + 1) { acc[d] = 0.0; }
+
+        var m = -1.0e30;                         // running max score
+        var l = 0.0;                             // running denominator
+
+        for (var j: i32 = 0; j < S; j = j + 1) {
+            // score s_j = (Q[i] · K[j]) * scale
+            var sj: f32 = 0.0;
+            for (var d: i32 = 0; d < D; d = d + 1) {
+                sj = sj + Q[i * D + d] * K[j * D + d];
+            }
+            sj = sj * scale;
+
+            // online-softmax update: rescale the running stats to the new max
+            let mnew = max(m, sj);
+            let corr = exp(m - mnew);            // 0 on the first step (m = -inf)
+            let p = exp(sj - mnew);
+            l = l * corr + p;
+            for (var d: i32 = 0; d < D; d = d + 1) {
+                acc[d] = acc[d] * corr + p * V[j * D + d];
+            }
+            m = mnew;
+        }
+
+        for (var d: i32 = 0; d < D; d = d + 1) {
+            O[i * D + d] = acc[d] / l;
+        }
+    }
+}

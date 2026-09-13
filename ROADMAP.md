@@ -24,6 +24,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] reduction: max variant (`reduce_max`) — `examples/reduce.clic`
 - [x] softmax, layernorm — `examples/nn.clic` (transformer blocks)
 - [x] scaled dot-product attention — `examples/attention.clic` (transformer core)
+- [x] flash-attention-style online-softmax attention (single streaming pass, O(D) memory, no sequence cap) — `examples/flash_attn.clic`, matches plain attention on GPU
 - [x] RMSNorm (LLaMA / Mistral normalization) — `examples/nn.clic`
 - [x] conv2d — `examples/conv2d.clic` (CNN core)
 - [x] multi-channel conv2d (Cin→Cout, uses `tid.z`) — `examples/conv2d_mc.clic`
