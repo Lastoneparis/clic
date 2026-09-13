@@ -1,0 +1,20 @@
+// maxpool.clic — 2D max pooling, PxP non-overlapping windows.
+//   Out[oy,ox] = max over the PxP input window. Pairs with conv2d in CNNs
+//   (downsampling). One thread per output pixel.
+
+kernel maxpool2d(H: i32, W: i32, P: i32, In: buffer<f32>, Out: buffer<f32>) {
+    let ox = tid.x;
+    let oy = tid.y;
+    let OW = W / P;
+    let OH = H / P;
+    if (ox < OW && oy < OH) {
+        var m = -1.0e30;
+        for (var py: i32 = 0; py < P; py = py + 1) {
+            for (var px: i32 = 0; px < P; px = px + 1) {
+                let v = In[(oy * P + py) * W + (ox * P + px)];
+                m = max(m, v);
+            }
+        }
+        Out[oy * OW + ox] = m;
+    }
+}

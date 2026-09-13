@@ -367,6 +367,18 @@ if verify == "saxpy" {
         checks += 1; if Int(out[r]) != bi { errs += 1 }
     }
     verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) argmax indices exact)"
+} else if verify == "maxpool2d" {
+    let H = Int(scalar("H")); let W = Int(scalar("W")); let P = Int(scalar("P"))
+    let OW = W / P, OH = H / P
+    let In = hostF["In"]!; let Out = bufF("Out")
+    var errs = 0, checks = 0
+    for _ in 0..<24 {
+        let oy = Int.random(in: 0..<OH), ox = Int.random(in: 0..<OW)
+        var m = -Float.greatestFiniteMagnitude
+        for py in 0..<P { for px in 0..<P { m = max(m, In[(oy*P+py)*W + (ox*P+px)]) } }
+        checks += 1; if Out[oy*OW+ox] != m { errs += 1 }
+    }
+    verifyMsg = (errs == 0 ? "PASS" : "FAIL") + " (\(checks - errs)/\(checks) maxpool elems exact)"
 } else if verify == "conv2d_mc" {
     let Cin = Int(scalar("Cin")); let Cout = Int(scalar("Cout"))
     let H = Int(scalar("H")); let W = Int(scalar("W"))
