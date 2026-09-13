@@ -1,0 +1,32 @@
+// keccak256.clic — Ethereum's keccak256 (single-block message, <=135 B).
+//
+// Identical to SHA3-256 except for the padding domain byte: original Keccak
+// (as used by Ethereum, Solidity's keccak256, and many blockchains) pads with
+// 0x01, whereas the later NIST SHA-3 standard uses 0x06. Everything else — the
+// rate, the Keccak-f[1600] permutation, the 256-bit squeeze — is the same, so
+// this reuses lib/keccak.clic and just changes that one byte.
+//
+// The host runs the empty message and checks against the canonical vector
+//   keccak256("") = c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
+
+include "../lib/keccak.clic"
+
+kernel keccak256(msglen: i32, msg: buffer<u32>, out: buffer<u32>) {
+    var A: array<u64, 25>;
+    for (var i: i32 = 0; i < 25; i = i + 1) { A[i] = ulong(0); }
+
+    for (var i: i32 = 0; i < 17; i = i + 1) {
+        A[i] = ulong(msg[i * 2 + 0]) | (ulong(msg[i * 2 + 1]) << 32);
+    }
+    // pad10*1 with the ORIGINAL Keccak domain byte 0x01 (Ethereum), 0x80 at 135
+    let L = msglen;
+    A[L / 8] = A[L / 8] ^ (ulong(1) << (8 * (L % 8)));
+    A[16] = A[16] ^ (ulong(0x80) << 56);
+
+    keccakf(A);
+
+    for (var i: i32 = 0; i < 4; i = i + 1) {
+        out[i * 2 + 0] = uint(A[i]);
+        out[i * 2 + 1] = uint(A[i] >> 32);
+    }
+}

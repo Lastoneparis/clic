@@ -248,6 +248,21 @@ if verify == "saxpy" {
     let ok = (got == want)
     let hex = got.map { String(format: "%02x", $0) }.joined()
     verifyMsg = (ok ? "PASS" : "FAIL") + " (SHA3-256(\"\") = \(hex))"
+} else if verify == "keccak256" {
+    let out = bufU("out")
+    var got = [UInt8](repeating: 0, count: 32)
+    for i in 0..<8 {
+        let w = out[i]
+        got[i*4+0] = UInt8(w & 0xff); got[i*4+1] = UInt8((w >> 8) & 0xff)
+        got[i*4+2] = UInt8((w >> 16) & 0xff); got[i*4+3] = UInt8((w >> 24) & 0xff)
+    }
+    // canonical KAT: keccak256("") (Ethereum)
+    let want: [UInt8] = [0xc5,0xd2,0x46,0x01,0x86,0xf7,0x23,0x3c,0x92,0x7e,0x7d,0xb2,
+        0xdc,0xc7,0x03,0xc0,0xe5,0x00,0xb6,0x53,0xca,0x82,0x27,0x3b,
+        0x7b,0xfa,0xd8,0x04,0x5d,0x85,0xa4,0x70]
+    let ok = (got == want)
+    let hex = got.map { String(format: "%02x", $0) }.joined()
+    verifyMsg = (ok ? "PASS" : "FAIL") + " (keccak256(\"\") = \(hex))"
 } else if verify == "keccak" {
     let out = bufU("out")
     var gpu = [UInt64](repeating: 0, count: 25)
