@@ -33,7 +33,7 @@ Worked through iteratively. Checked = done & pushed.
 - [x] math stdlib: `rsqrt sin cos tan atan2 exp2 log2 fract sign trunc` — verified on GPU (`examples/mathfns.clic`)
 - [x] crypto: sha256 as a callable module (`lib/sha256.clic`, 6 device fns) — `examples/sha256.clic` includes it, 1001/1001 vs CryptoKit
 - [x] `u64` type (`ulong`) + hex literals + 64-bit-safe literal suffixing — verified on GPU (`examples/u64mix.clic`)
-- [ ] crypto: keccak / SHA3-256 — now unblocked by `u64`
+- [x] crypto: Keccak-f[1600] permutation (SHA-3 / keccak256 core) — `examples/keccak.clic`, verified on GPU vs CPU reference + published zero-state KAT (lane0 = 0xF1258F7940E1DDE7)
 
 ## Manual & docs
 - [x] LANGUAGE.md reference

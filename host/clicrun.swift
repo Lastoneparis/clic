@@ -232,6 +232,36 @@ if verify == "saxpy" {
         if ref != 0 { maxRel = max(maxRel, Double(abs(C[r * N + c] - ref) / abs(ref))) }
     }
     verifyMsg = (maxRel <= 1e-3 ? "PASS" : "FAIL") + String(format: " (max rel err %.2e, relu+bias+matmul)", maxRel)
+} else if verify == "keccak" {
+    let out = bufU("out")
+    var gpu = [UInt64](repeating: 0, count: 25)
+    for i in 0..<25 { gpu[i] = UInt64(out[i * 2 + 0]) | (UInt64(out[i * 2 + 1]) << 32) }
+    // independent CPU Keccak-f[1600] on the zero state
+    let rho = [0,1,62,28,27, 36,44,6,55,20, 3,10,43,25,39, 41,45,15,21,8, 18,2,61,56,14]
+    let RC: [UInt64] = [0x1,0x8082,0x800000000000808A,0x8000000080008000,0x808B,0x80000001,
+        0x8000000080008081,0x8000000000008009,0x8A,0x88,0x80008009,0x8000000A,0x8000808B,
+        0x800000000000008B,0x8000000000008089,0x8000000000008003,0x8000000000008002,
+        0x8000000000000080,0x800A,0x800000008000000A,0x8000000080008081,0x8000000000008080,
+        0x80000001,0x8000000080008008]
+    func rotl(_ x: UInt64, _ n: Int) -> UInt64 { n == 0 ? x : ((x << n) | (x >> (64 - n))) }
+    var A = [UInt64](repeating: 0, count: 25)
+    for r in 0..<24 {
+        var C = [UInt64](repeating: 0, count: 5)
+        for x in 0..<5 { C[x] = A[x] ^ A[x+5] ^ A[x+10] ^ A[x+15] ^ A[x+20] }
+        var D = [UInt64](repeating: 0, count: 5)
+        for x in 0..<5 { D[x] = C[(x+4)%5] ^ rotl(C[(x+1)%5], 1) }
+        for x in 0..<5 { for y in 0..<5 { A[x+5*y] ^= D[x] } }
+        var B = [UInt64](repeating: 0, count: 25)
+        for x in 0..<5 { for y in 0..<5 { B[y + 5*((2*x+3*y)%5)] = rotl(A[x+5*y], rho[x+5*y]) } }
+        for x in 0..<5 { for y in 0..<5 { A[x+5*y] = B[x+5*y] ^ ((~B[(x+1)%5+5*y]) & B[(x+2)%5+5*y]) } }
+        A[0] ^= RC[r]
+    }
+    var bad = 0
+    for i in 0..<25 { if gpu[i] != A[i] { bad += 1 } }
+    let anchor = (gpu[0] == 0xF1258F7940E1DDE7)
+    verifyMsg = (bad == 0 && anchor ? "PASS" : "FAIL")
+        + String(format: " (%d/25 lanes vs CPU; zero-state KAT lane0=%016llx, anchor %@)",
+                 25 - bad, gpu[0], anchor ? "ok" : "MISMATCH")
 } else if verify == "u64mix" {
     let n = Int(scalar("n")); let out = bufU("out")
     var bad = 0

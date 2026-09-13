@@ -70,6 +70,7 @@ out[r] = uint(bi);
 - **Tiled GEMM** with `threadgroup` memory — [`examples/gemm_tiled.clic`](../examples/gemm_tiled.clic) (~864 GFLOP/s).
 - **Scaled dot-product attention** — [`examples/attention.clic`](../examples/attention.clic).
 - **SHA-256** (bitwise/`rotr`, local arrays) — [`examples/sha256.clic`](../examples/sha256.clic).
+- **Keccak-f[1600]** (SHA-3 / keccak256 core; `u64` lanes, 64-bit rotates) — [`examples/keccak.clic`](../examples/keccak.clic).
 - **Rasterizer** (the 3D cube) — [`examples/raster.clic`](../examples/raster.clic).
 
 ## Putting it together

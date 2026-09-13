@@ -1,0 +1,11 @@
+{
+  "kernel": "keccak",
+  "metal": "../build/keccak.metal",
+  "grid": [1, 1, 1],
+  "threadgroup": [1, 1, 1],
+  "iters": 100,
+  "verify": "keccak",
+  "bindings": [
+    { "name": "out", "kind": "buffer", "type": "u32", "len": 50, "init": "zero" }
+  ]
+}
